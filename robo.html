@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Never Miss Another Lead — AI Response Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14213D;
+    --ink-2:#1E2E52;
+    --paper:#FBF9F4;
+    --brass:#C9973E;
+    --coral:#E2574C;
+    --sage:#5F9E7F;
+    --slate:#8791A8;
+    --line: rgba(255,255,255,0.10);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: var(--ink);
+    color: var(--paper);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+  }
+  .wrap{
+    max-width:1100px;
+    margin:0 auto;
+    padding:56px 24px 80px;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--brass);
+    margin-bottom:18px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .eyebrow::before{
+    content:'';
+    width:7px;height:7px;border-radius:50%;
+    background:var(--coral);
+    box-shadow:0 0 0 0 rgba(226,87,76,0.6);
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(226,87,76,0.55);}
+    70%{box-shadow:0 0 0 8px rgba(226,87,76,0);}
+    100%{box-shadow:0 0 0 0 rgba(226,87,76,0);}
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:clamp(32px, 5vw, 52px);
+    line-height:1.08;
+    margin:0 0 20px;
+    max-width:760px;
+    letter-spacing:-0.01em;
+  }
+  h1 em{
+    font-style:italic;
+    color:var(--brass);
+  }
+  .sub{
+    font-size:17px;
+    color:var(--slate);
+    max-width:560px;
+    line-height:1.6;
+    margin-bottom:40px;
+  }
+
+  .controls{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-bottom:36px;
+    align-items:center;
+  }
+  .controls input, .controls select{
+    background:var(--ink-2);
+    border:1px solid var(--line);
+    color:var(--paper);
+    font-family:'Inter', sans-serif;
+    font-size:14px;
+    padding:11px 14px;
+    border-radius:8px;
+    outline:none;
+  }
+  .controls input:focus, .controls select:focus{
+    border-color:var(--brass);
+  }
+  .controls input{ width:220px; }
+  .btn{
+    background:var(--brass);
+    color:var(--ink);
+    border:none;
+    font-family:'Inter', sans-serif;
+    font-weight:700;
+    font-size:14px;
+    padding:12px 22px;
+    border-radius:8px;
+    cursor:pointer;
+    transition:transform 0.15s ease, background 0.15s ease;
+  }
+  .btn:hover{ background:#DBAB58; transform:translateY(-1px); }
+  .btn:active{ transform:translateY(0px); }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; transform:none; }
+  .btn.small{ padding:10px 16px; font-size:13px; }
+  .btn.ghost{ background:transparent; color:var(--slate); border:1px solid var(--line); }
+
+  .grid{
+    display:grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap:28px;
+  }
+  @media (max-width:820px){
+    .grid{ grid-template-columns: 1fr; }
+  }
+
+  .panel{
+    background:var(--ink-2);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:26px;
+  }
+  .panel h3{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    color:var(--slate);
+    margin:0 0 18px;
+  }
+
+  /* phone / notification simulation */
+  .phone-stage{
+    min-height:220px;
+    max-height:380px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
+    gap:10px;
+    padding-right:4px;
+  }
+  .phone-stage::-webkit-scrollbar{ width:6px; }
+  .phone-stage::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.15); border-radius:6px; }
+  .empty-state{
+    color:var(--slate);
+    font-size:14px;
+    text-align:center;
+    padding:40px 10px;
+    line-height:1.6;
+    margin:auto;
+  }
+  .call-card{
+    background:rgba(226,87,76,0.10);
+    border:1px solid rgba(226,87,76,0.35);
+    border-radius:12px;
+    padding:16px 18px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    animation:slideIn 0.35s ease;
+    flex-shrink:0;
+  }
+  .call-icon{
+    width:38px;height:38px;border-radius:50%;
+    background:var(--coral);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .call-text .who{ font-weight:600; font-size:14.5px; }
+  .call-text .meta{ font-size:12.5px; color:var(--slate); margin-top:2px; }
+
+  .typing-card{
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px 16px;
+    font-size:13.5px;
+    color:var(--slate);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    animation:slideIn 0.35s ease;
+    align-self:flex-start;
+  }
+  .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--slate);
+    animation:blink 1.1s infinite;
+  }
+  .dot:nth-child(2){ animation-delay:0.2s; }
+  .dot:nth-child(3){ animation-delay:0.4s; }
+  @keyframes blink{ 0%,80%,100%{opacity:0.25;} 40%{opacity:1;} }
+
+  .msg{
+    font-size:14px;
+    line-height:1.5;
+    padding:12px 15px;
+    max-width:82%;
+    animation:slideIn 0.3s ease;
+    flex-shrink:0;
+  }
+  .msg-business{
+    background:rgba(255,255,255,0.06);
+    color:var(--paper);
+    border:1px solid var(--line);
+    border-radius:4px 14px 14px 14px;
+    align-self:flex-start;
+  }
+  .msg-customer{
+    background:var(--brass);
+    color:var(--ink);
+    font-weight:500;
+    border-radius:14px 14px 4px 14px;
+    align-self:flex-end;
+  }
+  .msg-system{
+    align-self:center;
+    background:transparent;
+    color:var(--slate);
+    font-size:11.5px;
+    text-align:center;
+    padding:4px 10px;
+    max-width:100%;
+  }
+  .msg-meta{
+    font-size:10.5px;
+    color:var(--slate);
+    margin-top:-4px;
+    flex-shrink:0;
+  }
+  .msg-meta.left{ align-self:flex-start; margin-left:2px; }
+  .msg-meta.right{ align-self:flex-end; margin-right:2px; }
+  @keyframes slideIn{
+    from{ opacity:0; transform:translateY(8px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  .quick-replies{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:14px;
+  }
+  .chip{
+    background:rgba(255,255,255,0.05);
+    border:1px solid var(--line);
+    color:var(--paper);
+    font-size:12.5px;
+    padding:8px 13px;
+    border-radius:20px;
+    cursor:pointer;
+    transition:border-color 0.15s ease, background 0.15s ease;
+  }
+  .chip:hover{ border-color:var(--brass); background:rgba(201,151,62,0.10); }
+
+  .chat-input-row{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+  }
+  .chat-input-row input{
+    flex:1;
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--line);
+    color:var(--paper);
+    font-family:'Inter', sans-serif;
+    font-size:13.5px;
+    padding:11px 14px;
+    border-radius:8px;
+    outline:none;
+  }
+  .chat-input-row input:focus{ border-color:var(--brass); }
+
+  /* stats */
+  .stat-row{
+    display:flex;
+    gap:14px;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+  }
+  .stat{
+    flex:1;
+    min-width:120px;
+    background:rgba(255,255,255,0.03);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px 16px;
+  }
+  .stat .num{
+    font-family:'JetBrains Mono', monospace;
+    font-size:22px;
+    font-weight:600;
+  }
+  .stat .lbl{
+    font-size:11px;
+    color:var(--slate);
+    margin-top:4px;
+    line-height:1.3;
+  }
+  .stat.win .num{ color:var(--sage); }
+  .stat.lose .num{ color:var(--coral); text-decoration:line-through; text-decoration-color:rgba(226,87,76,0.5); }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:12.5px;
+  }
+  th{
+    text-align:left;
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--slate);
+    padding:8px 8px;
+    border-bottom:1px solid var(--line);
+  }
+  td{
+    padding:10px 8px;
+    border-bottom:1px solid var(--line);
+    color:var(--paper);
+  }
+  .badge{
+    display:inline-block;
+    font-size:11px;
+    font-weight:600;
+    padding:3px 9px;
+    border-radius:20px;
+  }
+  .badge.replied{ background:rgba(201,151,62,0.18); color:var(--brass); }
+  .badge.booked{ background:rgba(95,158,127,0.18); color:var(--sage); }
+  .badge.cancelled{ background:rgba(226,87,76,0.18); color:var(--coral); }
+  .log-empty{
+    color:var(--slate);
+    font-size:13.5px;
+    padding:16px 4px;
+  }
+
+  footer{
+    margin-top:48px;
+    padding-top:28px;
+    border-top:1px solid var(--line);
+    color:var(--slate);
+    font-size:13px;
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  footer b{ color:var(--paper); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">Live demo · missed-call auto-response</div>
+  <h1>They called. You were busy.<br><em>Now they're booked anyway.</em></h1>
+  <p class="sub">Type in a real business below, hit simulate, then reply as the customer — book, ask about hours or pricing — and watch the AI carry the whole conversation to a confirmed booking, then keep chatting naturally after.</p>
+
+  <div class="controls">
+    <input id="bizName" type="text" placeholder="Business name" value="Bright Smile Dental">
+    <select id="bizType" onchange="resetDemo()">
+      <option value="dental">Dental practice</option>
+      <option value="salon">Hair salon</option>
+      <option value="restaurant">Restaurant</option>
+      <option value="realestate">Real estate agent</option>
+      <option value="gym">Gym / studio</option>
+    </select>
+    <button class="btn" id="simulateBtn" onclick="simulateCall()">Simulate a missed call</button>
+    <button class="btn ghost" onclick="resetDemo()">Reset</button>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h3>What the customer experiences</h3>
+      <div class="phone-stage" id="phoneStage">
+        <div class="empty-state">Nothing yet — click "Simulate a missed call" above.</div>
+      </div>
+      <div class="quick-replies" id="quickReplies"></div>
+      <div class="chat-input-row" id="chatInputRow" style="display:none;">
+        <input id="chatInput" type="text" placeholder="Type as the customer..." onkeydown="if(event.key==='Enter')sendCustomerMessage()">
+        <button class="btn small" onclick="sendCustomerMessage()">Send</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>What the business owner sees</h3>
+      <div class="stat-row">
+        <div class="stat lose">
+          <div class="num">~47 hrs</div>
+          <div class="lbl">Industry average response time</div>
+        </div>
+        <div class="stat win">
+          <div class="num" id="yourAvg">—</div>
+          <div class="lbl">This system's response time</div>
+        </div>
+        <div class="stat">
+          <div class="num" id="leadCount">0</div>
+          <div class="lbl">Leads captured</div>
+        </div>
+        <div class="stat win">
+          <div class="num" id="bookedCount">0</div>
+          <div class="lbl">Bookings confirmed</div>
+        </div>
+      </div>
+
+      <h3 style="margin-top:6px;">Lead log</h3>
+      <table id="logTable">
+        <thead>
+          <tr><th>Time</th><th>Phone</th><th>Status</th><th>Appt</th></tr>
+        </thead>
+        <tbody id="logBody"></tbody>
+      </table>
+      <div class="log-empty" id="logEmpty">No leads logged yet.</div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Built as a live prototype — no real calls or texts are sent in this demo.</span>
+    <span><b>Next:</b> connect to Twilio + your calendar for the real version.</span>
+  </footer>
+</div>
+
+<script>
+const copy = {
+  dental:      { reply:(b)=>`Hi! Sorry we missed your call at ${b} 🦷 Are you looking to book a cleaning, or is this urgent? Reply here and we'll get you on the schedule today.`, prefix:'+1 (555)', bookLabel:'Book a cleaning', hours:(b)=>`We're open Mon–Fri 8am–5pm, and Saturdays 9am–1pm.`, price:(b)=>`A standard cleaning runs $120–150 — first-time patients often qualify for a discounted new patient exam.`, slots:['Tomorrow 10am','Tomorrow 1pm','Tomorrow 3pm'], askVerb:'cleaning', noun:'appointment' },
+  salon:       { reply:(b)=>`Hey! Sorry we missed you at ${b} 💇 Want to grab a spot this week? Just reply and we'll lock it in.`, prefix:'+1 (555)', bookLabel:'Book an appointment', hours:(b)=>`We're open Tue–Sat, 9am–7pm. Closed Sundays and Mondays.`, price:(b)=>`Cuts start at $45, color services start at $90 depending on length and technique.`, slots:['Tomorrow 11am','Tomorrow 2pm','Tomorrow 5pm'], askVerb:'appointment', noun:'appointment' },
+  restaurant:  { reply:(b)=>`Hi, sorry we missed your call — this is ${b}! Looking to book a table or place an order? Reply here and we'll take care of it.`, prefix:'+1 (555)', bookLabel:'Book a table', hours:(b)=>`We're open daily, 11am–10pm — kitchen closes at 9:30pm.`, price:(b)=>`Most entrees run $14–28, and we do a prix fixe option most evenings.`, slots:['6:00pm','7:30pm','8:45pm'], askVerb:'table', noun:'reservation' },
+  realestate:  { reply:(b)=>`Hi! This is ${b} — sorry I missed your call. Looking to book a showing or ask about a listing? Reply here and I'll get right back to you.`, prefix:'+1 (555)', bookLabel:'Book a showing', hours:(b)=>`I'm generally reachable 8am–7pm daily, happy to work around your schedule too.`, price:(b)=>`There's no cost to you as a buyer — I'm happy to walk you through how it works.`, slots:['Tomorrow 10am','Tomorrow 1pm','Tomorrow 4pm'], askVerb:'showing', noun:'showing' },
+  gym:         { reply:(b)=>`Hey! Sorry we missed you at ${b} 💪 Want to book a free trial class or ask about membership? Reply here and we'll set it up.`, prefix:'+1 (555)', bookLabel:'Book a trial class', hours:(b)=>`We're open 5am–11pm every day, staffed hours are 6am–9pm.`, price:(b)=>`Memberships start at $39/month, and we also offer a free trial class.`, slots:['Tomorrow 9am','Tomorrow 12pm','Tomorrow 6pm'], askVerb:'trial class', noun:'trial class' }
+};
+
+let leadCount = 0, bookedCount = 0, busy = false;
+let conv = { step:'idle', biz:'', type:'dental', phone:'', rowStatus:null, rowAppt:null, apptTime:null };
+
+function randPhone(prefix){
+  const n = () => Math.floor(Math.random()*900+100);
+  return `${prefix} ${n()}-${Math.floor(Math.random()*9000+1000)}`;
+}
+
+function scrollStage(){
+  const stage = document.getElementById('phoneStage');
+  stage.scrollTop = stage.scrollHeight;
+}
+
+function addBubble(role, text){
+  const stage = document.getElementById('phoneStage');
+  const empty = stage.querySelector('.empty-state');
+  if(empty) empty.remove();
+  const msg = document.createElement('div');
+  msg.className = 'msg ' + (role === 'business' ? 'msg-business' : role === 'system' ? 'msg-system' : 'msg-customer');
+  msg.textContent = text;
+  stage.appendChild(msg);
+  scrollStage();
+}
+
+function setQuickReplies(options){
+  const qr = document.getElementById('quickReplies');
+  qr.innerHTML = '';
+  options.forEach(opt => {
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.textContent = opt;
+    chip.onclick = () => { document.getElementById('chatInput').value = opt; sendCustomerMessage(); };
+    qr.appendChild(chip);
+  });
+}
+
+function classifyIntent(text){
+  const t = text.toLowerCase();
+  if(/\b(thank|thanks|thx|appreciate|great|awesome|perfect|sounds good|got it|cool|nice)\b/.test(t)) return 'thanks';
+  if(/\b(cancel|can't make it|cant make it|won't be able|wont be able)\b/.test(t)) return 'cancel';
+  if(/\b(reschedul|change (the|my) time|different time|move (it|my appointment))\b/.test(t)) return 'reschedule';
+  if(/\b(book|appointment|schedule|table|showing|class|cleaning|yes|sure|sounds good)\b/.test(t)) return 'book';
+  if(/\b(hour|open|close|when are you)\b/.test(t)) return 'hours';
+  if(/\b(cost|price|how much|\$)\b/.test(t)) return 'price';
+  if(/\b(where|address|location|park|parking)\b/.test(t)) return 'location';
+  return 'fallback';
+}
+
+function simulateCall(){
+  if(busy) return;
+  busy = true;
+  document.getElementById('simulateBtn').disabled = true;
+
+  const biz = document.getElementById('bizName').value.trim() || 'Your Business';
+  const type = document.getElementById('bizType').value;
+  conv = { step:'awaiting_intent', biz, type, phone: randPhone(copy[type].prefix), rowStatus:null, rowAppt:null, apptTime:null };
+
+  const stage = document.getElementById('phoneStage');
+  stage.innerHTML = '';
+  document.getElementById('quickReplies').innerHTML = '';
+  document.getElementById('chatInputRow').style.display = 'none';
+
+  const callCard = document.createElement('div');
+  callCard.className = 'call-card';
+  callCard.innerHTML = `
+    <div class="call-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="call-text">
+      <div class="who">Missed call from ${conv.phone}</div>
+      <div class="meta">just now · ${biz}</div>
+    </div>`;
+  stage.appendChild(callCard);
+
+  setTimeout(() => {
+    const typing = document.createElement('div');
+    typing.className = 'typing-card';
+    typing.id = 'typingIndicator';
+    typing.innerHTML = `AI drafting reply <span class="dot"></span><span class="dot"></span><span class="dot"></span>`;
+    stage.appendChild(typing);
+    scrollStage();
+  }, 700);
+
+  setTimeout(() => {
+    const typingEl = document.getElementById('typingIndicator');
+    if(typingEl) typingEl.remove();
+
+    const responseSeconds = (Math.random()*4 + 9).toFixed(1);
+    addBubble('business', copy[type].reply(biz));
+
+    leadCount++;
+    document.getElementById('leadCount').textContent = leadCount;
+    document.getElementById('yourAvg').textContent = `${responseSeconds}s`;
+
+    const logBody = document.getElementById('logBody');
+    const row = document.createElement('tr');
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    const statusTd = document.createElement('td');
+    statusTd.innerHTML = '<span class="badge replied">Auto-replied</span>';
+    const apptTd = document.createElement('td');
+    apptTd.textContent = '—';
+    row.innerHTML = `<td>${timeStr}</td><td>${conv.phone}</td>`;
+    row.appendChild(statusTd);
+    row.appendChild(apptTd);
+    logBody.prepend(row);
+    document.getElementById('logEmpty').style.display = 'none';
+    conv.rowStatus = statusTd;
+    conv.rowAppt = apptTd;
+
+    document.getElementById('chatInputRow').style.display = 'flex';
+    setQuickReplies([copy[type].bookLabel, 'What are your hours?', 'How much does it cost?']);
+
+    busy = false;
+    document.getElementById('simulateBtn').disabled = false;
+  }, 2000);
+}
+
+function sendCustomerMessage(){
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text || conv.step === 'idle') return;
+  input.value = '';
+  addBubble('customer', text);
+  document.getElementById('quickReplies').innerHTML = '';
+
+  const typing = document.createElement('div');
+  typing.className = 'typing-card';
+  typing.id = 'typingIndicator2';
+  typing.innerHTML = `AI typing <span class="dot"></span><span class="dot"></span><span class="dot"></span>`;
+  document.getElementById('phoneStage').appendChild(typing);
+  scrollStage();
+
+  setTimeout(() => handleCustomerMessage(text), 1000 + Math.random()*500);
+}
+
+function confirmBooking(cfg, timeText){
+  conv.apptTime = timeText;
+  addBubble('business', `Perfect — you're booked for ${timeText} at ${conv.biz}. We'll send a reminder beforehand. Reply CANCEL anytime if plans change, or ask me anything else.`);
+  conv.step = 'post_booking';
+  bookedCount++;
+  document.getElementById('bookedCount').textContent = bookedCount;
+  if(conv.rowStatus) conv.rowStatus.innerHTML = '<span class="badge booked">Booked</span>';
+  if(conv.rowAppt) conv.rowAppt.textContent = timeText;
+  setQuickReplies(['Thank you!', 'What are your hours?', 'Where are you located?']);
+}
+
+function handleCustomerMessage(text){
+  const t2 = document.getElementById('typingIndicator2');
+  if(t2) t2.remove();
+
+  const cfg = copy[conv.type];
+
+  // Customer is picking a time slot after being offered options
+  if(conv.step === 'awaiting_time'){
+    confirmBooking(cfg, text);
+    return;
+  }
+
+  const intent = classifyIntent(text);
+
+  // Conversation continues naturally even after a booking is confirmed
+  if(conv.step === 'post_booking'){
+    if(intent === 'cancel'){
+      addBubble('business', `No problem — I've cancelled your ${cfg.noun} for ${conv.apptTime || 'the scheduled time'}. Let me know if you'd like to pick a new time.`);
+      if(conv.rowStatus) conv.rowStatus.innerHTML = '<span class="badge cancelled">Cancelled</span>';
+      if(conv.rowAppt) conv.rowAppt.textContent = 'Cancelled';
+      addBubble('system', 'Booking cancelled');
+      conv.step = 'awaiting_intent';
+      setQuickReplies([cfg.bookLabel, 'What are your hours?']);
+    } else if(intent === 'reschedule'){
+      addBubble('business', `Of course — I have ${cfg.slots.join(', ')} open. Which works better for you?`);
+      conv.step = 'awaiting_time';
+      setQuickReplies(cfg.slots);
+    } else if(intent === 'hours'){
+      addBubble('business', cfg.hours(conv.biz));
+      setQuickReplies(['Where are you located?', 'Thank you!']);
+    } else if(intent === 'price'){
+      addBubble('business', cfg.price(conv.biz));
+      setQuickReplies(['Where are you located?', 'Thank you!']);
+    } else if(intent === 'location'){
+      addBubble('business', `We're easy to find — I'll text over the exact address and parking info before your ${cfg.noun}.`);
+      setQuickReplies(['What are your hours?', 'Thank you!']);
+    } else if(intent === 'thanks'){
+      addBubble('business', `You're welcome! See you soon 😊`);
+      setQuickReplies([]);
+    } else {
+      addBubble('business', `Got it, I've noted that for the team. Anything else I can help with before your ${cfg.noun}?`);
+      setQuickReplies(['What are your hours?', 'Where are you located?', 'Thank you!']);
+    }
+    return;
+  }
+
+  // Pre-booking conversation
+  if(intent === 'book'){
+    addBubble('business', `Great — I have ${cfg.slots.join(', ')} open for a ${cfg.askVerb}. Which works best?`);
+    conv.step = 'awaiting_time';
+    setQuickReplies(cfg.slots);
+  } else if(intent === 'hours'){
+    addBubble('business', cfg.hours(conv.biz));
+    setQuickReplies([cfg.bookLabel, 'How much does it cost?']);
+  } else if(intent === 'price'){
+    addBubble('business', cfg.price(conv.biz));
+    setQuickReplies([cfg.bookLabel, 'What are your hours?']);
+  } else if(intent === 'location'){
+    addBubble('business', `We'll send the exact address and parking info as soon as you book — want me to grab you a spot?`);
+    setQuickReplies([cfg.bookLabel, 'What are your hours?']);
+  } else if(intent === 'thanks'){
+    addBubble('business', `Anytime! Let me know if you'd like to book a ${cfg.askVerb}.`);
+    setQuickReplies([cfg.bookLabel, 'What are your hours?', 'How much does it cost?']);
+  } else {
+    addBubble('business', `Got it — I've flagged this for our team and someone will follow up shortly. If you'd like, I can also help you book right now — just say the word.`);
+    setQuickReplies([cfg.bookLabel, 'What are your hours?', 'How much does it cost?']);
+  }
+}
+
+function resetDemo(){
+  leadCount = 0; bookedCount = 0; busy = false;
+  conv = { step:'idle', biz:'', type: document.getElementById('bizType').value, phone:'', rowStatus:null, rowAppt:null, apptTime:null };
+  document.getElementById('simulateBtn').disabled = false;
+  document.getElementById('leadCount').textContent = '0';
+  document.getElementById('bookedCount').textContent = '0';
+  document.getElementById('yourAvg').textContent = '—';
+  document.getElementById('logBody').innerHTML = '';
+  document.getElementById('logEmpty').style.display = 'block';
+  document.getElementById('quickReplies').innerHTML = '';
+  document.getElementById('chatInputRow').style.display = 'none';
+  document.getElementById('phoneStage').innerHTML = '<div class="empty-state">Nothing yet — click "Simulate a missed call" above.</div>';
+}
+</script>
+</body>
+</html>
