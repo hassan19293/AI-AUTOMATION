@@ -112,6 +112,8 @@
   .btn:disabled{ opacity:0.5; cursor:not-allowed; transform:none; }
   .btn.small{ padding:10px 16px; font-size:13px; }
   .btn.ghost{ background:transparent; color:var(--slate); border:1px solid var(--line); }
+  .btn.outline{ background:transparent; color:var(--brass); border:1px solid var(--brass); }
+  .btn.outline:hover{ background:rgba(201,151,62,0.10); }
 
   .grid{
     display:grid;
@@ -127,6 +129,8 @@
     border:1px solid var(--line);
     border-radius:16px;
     padding:26px;
+    position:relative;
+    overflow:hidden;
   }
   .panel h3{
     font-family:'JetBrains Mono', monospace;
@@ -136,6 +140,36 @@
     color:var(--slate);
     margin:0 0 18px;
   }
+  .panel-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .panel-head h3{ margin:0; }
+
+  /* toast */
+  .toast-stack{
+    position:absolute;
+    top:14px; right:14px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    z-index:5;
+    max-width:260px;
+  }
+  .toast{
+    background:var(--ink);
+    border:1px solid var(--brass);
+    border-radius:10px;
+    padding:10px 14px;
+    font-size:12.5px;
+    line-height:1.4;
+    box-shadow:0 8px 24px rgba(0,0,0,0.35);
+    animation: toastIn 0.3s ease, toastOut 0.4s ease 2.6s forwards;
+  }
+  @keyframes toastIn{ from{opacity:0; transform:translateX(12px);} to{opacity:1; transform:translateX(0);} }
+  @keyframes toastOut{ to{opacity:0; transform:translateX(12px);} }
 
   /* phone / notification simulation */
   .phone-stage{
@@ -224,21 +258,15 @@
   }
   .msg-system{
     align-self:center;
-    background:transparent;
+    background:rgba(255,255,255,0.03);
+    border:1px dashed var(--line);
     color:var(--slate);
     font-size:11.5px;
     text-align:center;
-    padding:4px 10px;
+    padding:6px 14px;
+    border-radius:20px;
     max-width:100%;
   }
-  .msg-meta{
-    font-size:10.5px;
-    color:var(--slate);
-    margin-top:-4px;
-    flex-shrink:0;
-  }
-  .msg-meta.left{ align-self:flex-start; margin-left:2px; }
-  .msg-meta.right{ align-self:flex-end; margin-right:2px; }
   @keyframes slideIn{
     from{ opacity:0; transform:translateY(8px); }
     to{ opacity:1; transform:translateY(0); }
@@ -280,6 +308,10 @@
   }
   .chat-input-row input:focus{ border-color:var(--brass); }
 
+  .lifecycle-row{
+    margin-top:12px;
+  }
+
   /* stats */
   .stat-row{
     display:flex;
@@ -309,6 +341,40 @@
   .stat.win .num{ color:var(--sage); }
   .stat.lose .num{ color:var(--coral); text-decoration:line-through; text-decoration-color:rgba(226,87,76,0.5); }
 
+  /* funnel */
+  .funnel{
+    display:flex;
+    align-items:stretch;
+    gap:0;
+    margin-bottom:24px;
+    background:rgba(255,255,255,0.03);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .funnel-step{
+    flex:1;
+    padding:12px 8px;
+    text-align:center;
+    border-right:1px solid var(--line);
+    position:relative;
+  }
+  .funnel-step:last-child{ border-right:none; }
+  .funnel-step .num{
+    font-family:'JetBrains Mono', monospace;
+    font-size:19px;
+    font-weight:600;
+    color:var(--paper);
+  }
+  .funnel-step .lbl{
+    font-size:9.5px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--slate);
+    margin-top:3px;
+  }
+  .funnel-step.active .num{ color:var(--brass); }
+
   table{
     width:100%;
     border-collapse:collapse;
@@ -335,14 +401,23 @@
     font-weight:600;
     padding:3px 9px;
     border-radius:20px;
+    white-space:nowrap;
   }
   .badge.replied{ background:rgba(201,151,62,0.18); color:var(--brass); }
   .badge.booked{ background:rgba(95,158,127,0.18); color:var(--sage); }
   .badge.cancelled{ background:rgba(226,87,76,0.18); color:var(--coral); }
+  .badge.reminded{ background:rgba(201,151,62,0.18); color:var(--brass); }
+  .badge.completed{ background:rgba(95,158,127,0.18); color:var(--sage); }
+  .badge.reviewed{ background:rgba(95,158,127,0.28); color:var(--sage); }
   .log-empty{
     color:var(--slate);
     font-size:13.5px;
     padding:16px 4px;
+  }
+  .log-foot{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:12px;
   }
 
   footer{
@@ -364,7 +439,7 @@
 
   <div class="eyebrow">Live demo · missed-call auto-response</div>
   <h1>They called. You were busy.<br><em>Now they're booked anyway.</em></h1>
-  <p class="sub">Type in a real business below, hit simulate, then reply as the customer — book, ask about hours or pricing — and watch the AI carry the whole conversation to a confirmed booking, then keep chatting naturally after.</p>
+  <p class="sub">Type in a real business below, hit simulate, then reply as the customer — book, ask about hours or pricing — and watch the AI carry the whole relationship: booking, reminder, and review request.</p>
 
   <div class="controls">
     <input id="bizName" type="text" placeholder="Business name" value="Bright Smile Dental">
@@ -390,9 +465,13 @@
         <input id="chatInput" type="text" placeholder="Type as the customer..." onkeydown="if(event.key==='Enter')sendCustomerMessage()">
         <button class="btn small" onclick="sendCustomerMessage()">Send</button>
       </div>
+      <div class="lifecycle-row" id="lifecycleRow" style="display:none;">
+        <button class="btn outline small" id="lifecycleBtn" onclick="advanceLifecycle()"></button>
+      </div>
     </div>
 
     <div class="panel">
+      <div class="toast-stack" id="toastStack"></div>
       <h3>What the business owner sees</h3>
       <div class="stat-row">
         <div class="stat lose">
@@ -403,17 +482,19 @@
           <div class="num" id="yourAvg">—</div>
           <div class="lbl">This system's response time</div>
         </div>
-        <div class="stat">
-          <div class="num" id="leadCount">0</div>
-          <div class="lbl">Leads captured</div>
-        </div>
-        <div class="stat win">
-          <div class="num" id="bookedCount">0</div>
-          <div class="lbl">Bookings confirmed</div>
-        </div>
       </div>
 
-      <h3 style="margin-top:6px;">Lead log</h3>
+      <div class="funnel" id="funnel">
+        <div class="funnel-step"><div class="num" id="fMissed">0</div><div class="lbl">Missed</div></div>
+        <div class="funnel-step"><div class="num" id="fReplied">0</div><div class="lbl">Replied</div></div>
+        <div class="funnel-step"><div class="num" id="fBooked">0</div><div class="lbl">Booked</div></div>
+        <div class="funnel-step"><div class="num" id="fCompleted">0</div><div class="lbl">Completed</div></div>
+        <div class="funnel-step"><div class="num" id="fReviewed">0</div><div class="lbl">Reviewed</div></div>
+      </div>
+
+      <div class="panel-head">
+        <h3 style="margin:0;">Lead log</h3>
+      </div>
       <table id="logTable">
         <thead>
           <tr><th>Time</th><th>Phone</th><th>Status</th><th>Appt</th></tr>
@@ -421,6 +502,9 @@
         <tbody id="logBody"></tbody>
       </table>
       <div class="log-empty" id="logEmpty">No leads logged yet.</div>
+      <div class="log-foot">
+        <button class="btn ghost small" onclick="exportCSV()">Export CSV</button>
+      </div>
     </div>
   </div>
 
@@ -439,8 +523,9 @@ const copy = {
   gym:         { reply:(b)=>`Hey! Sorry we missed you at ${b} 💪 Want to book a free trial class or ask about membership? Reply here and we'll set it up.`, prefix:'+1 (555)', bookLabel:'Book a trial class', hours:(b)=>`We're open 5am–11pm every day, staffed hours are 6am–9pm.`, price:(b)=>`Memberships start at $39/month, and we also offer a free trial class.`, slots:['Tomorrow 9am','Tomorrow 12pm','Tomorrow 6pm'], askVerb:'trial class', noun:'trial class' }
 };
 
-let leadCount = 0, bookedCount = 0, busy = false;
+let leadCount = 0, bookedCount = 0, completedCount = 0, reviewedCount = 0, busy = false;
 let conv = { step:'idle', biz:'', type:'dental', phone:'', rowStatus:null, rowAppt:null, apptTime:null };
+let leadRows = [];
 
 function randPhone(prefix){
   const n = () => Math.floor(Math.random()*900+100);
@@ -461,6 +546,23 @@ function addBubble(role, text){
   msg.textContent = text;
   stage.appendChild(msg);
   scrollStage();
+}
+
+function showToast(text){
+  const stack = document.getElementById('toastStack');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = text;
+  stack.appendChild(t);
+  setTimeout(() => t.remove(), 3100);
+}
+
+function updateFunnel(){
+  document.getElementById('fMissed').textContent = leadCount;
+  document.getElementById('fReplied').textContent = leadCount;
+  document.getElementById('fBooked').textContent = bookedCount;
+  document.getElementById('fCompleted').textContent = completedCount;
+  document.getElementById('fReviewed').textContent = reviewedCount;
 }
 
 function setQuickReplies(options){
@@ -500,6 +602,7 @@ function simulateCall(){
   stage.innerHTML = '';
   document.getElementById('quickReplies').innerHTML = '';
   document.getElementById('chatInputRow').style.display = 'none';
+  document.getElementById('lifecycleRow').style.display = 'none';
 
   const callCard = document.createElement('div');
   callCard.className = 'call-card';
@@ -512,6 +615,8 @@ function simulateCall(){
       <div class="meta">just now · ${biz}</div>
     </div>`;
   stage.appendChild(callCard);
+
+  showToast(`📞 Missed call from ${conv.phone}`);
 
   setTimeout(() => {
     const typing = document.createElement('div');
@@ -530,8 +635,9 @@ function simulateCall(){
     addBubble('business', copy[type].reply(biz));
 
     leadCount++;
-    document.getElementById('leadCount').textContent = leadCount;
     document.getElementById('yourAvg').textContent = `${responseSeconds}s`;
+    updateFunnel();
+    showToast(`🤖 Auto-replied in ${responseSeconds}s`);
 
     const logBody = document.getElementById('logBody');
     const row = document.createElement('tr');
@@ -548,6 +654,7 @@ function simulateCall(){
     document.getElementById('logEmpty').style.display = 'none';
     conv.rowStatus = statusTd;
     conv.rowAppt = apptTd;
+    leadRows.push({ time: timeStr, phone: conv.phone, status: 'Auto-replied', appt: '—' });
 
     document.getElementById('chatInputRow').style.display = 'flex';
     setQuickReplies([copy[type].bookLabel, 'What are your hours?', 'How much does it cost?']);
@@ -575,15 +682,58 @@ function sendCustomerMessage(){
   setTimeout(() => handleCustomerMessage(text), 1000 + Math.random()*500);
 }
 
+function updateRowInLog(status, appt){
+  if(conv.rowStatus) conv.rowStatus.innerHTML = status;
+  if(conv.rowAppt && appt !== undefined) conv.rowAppt.textContent = appt;
+}
+
 function confirmBooking(cfg, timeText){
   conv.apptTime = timeText;
   addBubble('business', `Perfect — you're booked for ${timeText} at ${conv.biz}. We'll send a reminder beforehand. Reply CANCEL anytime if plans change, or ask me anything else.`);
   conv.step = 'post_booking';
   bookedCount++;
-  document.getElementById('bookedCount').textContent = bookedCount;
-  if(conv.rowStatus) conv.rowStatus.innerHTML = '<span class="badge booked">Booked</span>';
-  if(conv.rowAppt) conv.rowAppt.textContent = timeText;
+  updateFunnel();
+  showToast(`📅 New booking — ${timeText}`);
+  updateRowInLog('<span class="badge booked">Booked</span>', timeText);
   setQuickReplies(['Thank you!', 'What are your hours?', 'Where are you located?']);
+  showLifecycleButton('Send 24hr reminder', 'reminder');
+}
+
+function showLifecycleButton(label, action){
+  const row = document.getElementById('lifecycleRow');
+  const btn = document.getElementById('lifecycleBtn');
+  btn.textContent = label;
+  btn.dataset.action = action;
+  row.style.display = 'block';
+}
+
+function hideLifecycleButton(){
+  document.getElementById('lifecycleRow').style.display = 'none';
+}
+
+function advanceLifecycle(){
+  const action = document.getElementById('lifecycleBtn').dataset.action;
+  const cfg = copy[conv.type];
+
+  if(action === 'reminder'){
+    addBubble('system', 'Time skip: 24 hours later');
+    addBubble('business', `Reminder: your ${cfg.noun} at ${conv.biz} is coming up — ${conv.apptTime}. Reply CANCEL if anything changes, see you soon!`);
+    updateRowInLog('<span class="badge reminded">Reminded</span>');
+    showToast('⏰ Reminder sent automatically');
+    showLifecycleButton('Mark appointment complete', 'complete');
+  } else if(action === 'complete'){
+    addBubble('system', `${conv.apptTime} — appointment completed`);
+    completedCount++;
+    updateFunnel();
+    updateRowInLog('<span class="badge completed">Completed</span>');
+    showToast('✅ Appointment marked complete');
+    setTimeout(() => {
+      addBubble('business', `Thanks for coming in today! Would you mind leaving us a quick review? Just reply with a star rating.`);
+      setQuickReplies(['⭐⭐⭐⭐⭐', '⭐⭐⭐⭐', '⭐⭐⭐']);
+      conv.step = 'awaiting_review';
+    }, 900);
+    hideLifecycleButton();
+  }
 }
 
 function handleCustomerMessage(text){
@@ -592,26 +742,37 @@ function handleCustomerMessage(text){
 
   const cfg = copy[conv.type];
 
-  // Customer is picking a time slot after being offered options
   if(conv.step === 'awaiting_time'){
     confirmBooking(cfg, text);
     return;
   }
 
+  if(conv.step === 'awaiting_review'){
+    const stars = (text.match(/⭐/g) || []).length || (text.match(/\d/) ? parseInt(text.match(/\d/)[0]) : 5);
+    addBubble('business', `Thank you so much — that really helps us out! 🙏`);
+    reviewedCount++;
+    updateFunnel();
+    updateRowInLog('<span class="badge reviewed">Reviewed</span>', `${conv.apptTime} · ${'★'.repeat(Math.min(stars,5))}`);
+    showToast(`⭐ New ${Math.min(stars,5)}-star review`);
+    setQuickReplies([]);
+    conv.step = 'done';
+    return;
+  }
+
   const intent = classifyIntent(text);
 
-  // Conversation continues naturally even after a booking is confirmed
   if(conv.step === 'post_booking'){
     if(intent === 'cancel'){
       addBubble('business', `No problem — I've cancelled your ${cfg.noun} for ${conv.apptTime || 'the scheduled time'}. Let me know if you'd like to pick a new time.`);
-      if(conv.rowStatus) conv.rowStatus.innerHTML = '<span class="badge cancelled">Cancelled</span>';
-      if(conv.rowAppt) conv.rowAppt.textContent = 'Cancelled';
-      addBubble('system', 'Booking cancelled');
+      updateRowInLog('<span class="badge cancelled">Cancelled</span>', 'Cancelled');
+      showToast('❌ Booking cancelled');
       conv.step = 'awaiting_intent';
+      hideLifecycleButton();
       setQuickReplies([cfg.bookLabel, 'What are your hours?']);
     } else if(intent === 'reschedule'){
       addBubble('business', `Of course — I have ${cfg.slots.join(', ')} open. Which works better for you?`);
       conv.step = 'awaiting_time';
+      hideLifecycleButton();
       setQuickReplies(cfg.slots);
     } else if(intent === 'hours'){
       addBubble('business', cfg.hours(conv.biz));
@@ -632,7 +793,6 @@ function handleCustomerMessage(text){
     return;
   }
 
-  // Pre-booking conversation
   if(intent === 'book'){
     addBubble('business', `Great — I have ${cfg.slots.join(', ')} open for a ${cfg.askVerb}. Which works best?`);
     conv.step = 'awaiting_time';
@@ -655,18 +815,36 @@ function handleCustomerMessage(text){
   }
 }
 
+function exportCSV(){
+  if(leadRows.length === 0){ showToast('No leads to export yet'); return; }
+  const header = 'Time,Phone,Status,Appointment\n';
+  const rows = leadRows.map(r => `"${r.time}","${r.phone}","${r.status}","${r.appt}"`).join('\n');
+  const csv = header + rows;
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'lead-log.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 function resetDemo(){
-  leadCount = 0; bookedCount = 0; busy = false;
+  leadCount = 0; bookedCount = 0; completedCount = 0; reviewedCount = 0; busy = false;
+  leadRows = [];
   conv = { step:'idle', biz:'', type: document.getElementById('bizType').value, phone:'', rowStatus:null, rowAppt:null, apptTime:null };
   document.getElementById('simulateBtn').disabled = false;
-  document.getElementById('leadCount').textContent = '0';
-  document.getElementById('bookedCount').textContent = '0';
   document.getElementById('yourAvg').textContent = '—';
   document.getElementById('logBody').innerHTML = '';
   document.getElementById('logEmpty').style.display = 'block';
   document.getElementById('quickReplies').innerHTML = '';
   document.getElementById('chatInputRow').style.display = 'none';
+  document.getElementById('lifecycleRow').style.display = 'none';
+  document.getElementById('toastStack').innerHTML = '';
   document.getElementById('phoneStage').innerHTML = '<div class="empty-state">Nothing yet — click "Simulate a missed call" above.</div>';
+  updateFunnel();
 }
 </script>
 </body>
