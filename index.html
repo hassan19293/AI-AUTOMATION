@@ -626,6 +626,15 @@ function advanceLifecycle(){
   }
 }
 
+function handleComplaint(){
+  addBubble('business', `I'm really sorry to hear that. Let me get someone from our team to reach out to you directly right away.`);
+  addBubble('system', `Escalated to ${conv.biz}'s owner`);
+  showToast('🚨 Escalated to owner');
+  if(conv.rowStatus) updateRowInLog('<span class="badge escalated">Escalated</span>');
+  setQuickReplies([]);
+  if(!conv.agentMode){ conv.agentMode = true; setAgentModeUI(true); }
+}
+
 function handleCustomerMessage(text){
   const t2 = document.getElementById('typingIndicator2');
   if(t2) t2.remove();
@@ -634,6 +643,7 @@ function handleCustomerMessage(text){
   if(conv.step === 'awaiting_time'){ confirmBooking(cfg, text); return; }
 
   if(conv.step === 'done'){
+    if(classifyIntent(text) === 'complaint'){ handleComplaint(); return; }
     const lower = text.toLowerCase();
     if(/leave|sure|yes|ok/.test(lower)){
       addBubble('business', `Wonderful — here's the link to leave a review: g.page/${conv.biz.toLowerCase().replace(/\s+/g,'')}/review (simulated link). Thanks again!`);
@@ -671,12 +681,7 @@ function handleCustomerMessage(text){
   const intent = classifyIntent(text);
 
   if(intent === 'complaint'){
-    addBubble('business', `I'm really sorry to hear that. Let me get someone from our team to reach out to you directly right away.`);
-    addBubble('system', `Escalated to ${conv.biz}'s owner`);
-    showToast('🚨 Escalated to owner');
-    if(conv.rowStatus) updateRowInLog('<span class="badge escalated">Escalated</span>');
-    setQuickReplies([]);
-    if(!conv.agentMode){ conv.agentMode = true; setAgentModeUI(true); }
+    handleComplaint();
     return;
   }
 
