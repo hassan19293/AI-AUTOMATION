@@ -127,6 +127,7 @@
   .msg{ font-size:14px; line-height:1.5; padding:12px 15px; max-width:82%; animation:slideIn 0.3s ease; flex-shrink:0; }
   .msg-business{ background:rgba(255,255,255,0.06); color:var(--paper); border:1px solid var(--line); border-radius:4px 14px 14px 14px; align-self:flex-start; }
   .msg-customer{ background:var(--brass); color:var(--ink); font-weight:500; border-radius:14px 14px 4px 14px; align-self:flex-end; }
+  .msg-agent{ background:rgba(226,87,76,0.12); border:1px solid rgba(226,87,76,0.4); color:var(--paper); border-radius:4px 14px 14px 14px; align-self:flex-start; }
   .msg-system{
     align-self:center; background:rgba(255,255,255,0.03); border:1px dashed var(--line); color:var(--slate);
     font-size:11.5px; text-align:center; padding:6px 14px; border-radius:20px; max-width:100%;
@@ -163,6 +164,27 @@
   .funnel-step:last-child{ border-right:none; }
   .funnel-step .num{ font-family:'JetBrains Mono', monospace; font-size:19px; font-weight:600; color:var(--paper); }
   .funnel-step .lbl{ font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--slate); margin-top:3px; }
+
+  /* live agent takeover */
+  .agent-panel{
+    background:rgba(226,87,76,0.06); border:1px solid rgba(226,87,76,0.25); border-radius:10px;
+    padding:14px 16px; margin-bottom:20px;
+  }
+  .agent-panel-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .agent-panel-head .lbl{ font-size:12.5px; color:var(--paper); font-weight:600; }
+  .agent-panel-sub{ font-size:11.5px; color:var(--slate); margin-top:3px; }
+  .agent-input-row{ display:flex; gap:8px; margin-top:12px; }
+  .agent-input-row input{
+    flex:1; background:rgba(255,255,255,0.05); border:1px solid var(--line); color:var(--paper);
+    font-family:'Inter', sans-serif; font-size:13.5px; padding:10px 13px; border-radius:8px; outline:none;
+  }
+  .agent-input-row input:focus{ border-color:var(--coral); }
+  .agent-status{
+    font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;
+    padding:3px 8px; border-radius:6px;
+  }
+  .agent-status.off{ background:rgba(255,255,255,0.06); color:var(--slate); }
+  .agent-status.on{ background:rgba(226,87,76,0.2); color:var(--coral); }
 
   /* google calendar card */
   .gcal-card{
@@ -260,6 +282,21 @@
     <div class="panel">
       <div class="toast-stack" id="toastStack"></div>
       <h3>What the business owner sees</h3>
+
+      <div class="agent-panel">
+        <div class="agent-panel-head">
+          <div>
+            <div class="lbl">Live agent takeover</div>
+            <div class="agent-panel-sub">Jump in and reply as a real person any time — the AI pauses while you're active.</div>
+          </div>
+          <button class="btn small" id="agentToggleBtn" onclick="toggleAgentMode()">Take over chat</button>
+        </div>
+        <div class="agent-input-row" id="agentInputRow" style="display:none;">
+          <input id="agentInput" type="text" placeholder="Type as the human agent..." onkeydown="if(event.key==='Enter')sendAgentMessage()">
+          <button class="btn small" onclick="sendAgentMessage()">Send</button>
+        </div>
+      </div>
+
       <div class="stat-row">
         <div class="stat lose"><div class="num">~47 hrs</div><div class="lbl">Industry average response time</div></div>
         <div class="stat win"><div class="num" id="yourAvg">—</div><div class="lbl">This system's response time</div></div>
@@ -323,7 +360,7 @@ const copy = {
 };
 
 let leadCount = 0, bookedCount = 0, completedCount = 0, reviewedCount = 0, busy = false;
-let conv = { step:'idle', biz:'', type:'dental', phone:'', rowStatus:null, rowAppt:null, apptTime:null };
+let conv = { step:'idle', biz:'', type:'dental', phone:'', rowStatus:null, rowAppt:null, apptTime:null, agentMode:false };
 let leadRows = [];
 
 function randPhone(prefix){
@@ -337,8 +374,8 @@ function addBubble(role, text){
   const empty = stage.querySelector('.empty-state');
   if(empty) empty.remove();
   const msg = document.createElement('div');
-  msg.className = 'msg ' + (role === 'business' ? 'msg-business' : role === 'system' ? 'msg-system' : 'msg-customer');
-  msg.textContent = text;
+  msg.className = 'msg ' + (role === 'business' ? 'msg-business' : role === 'agent' ? 'msg-agent' : role === 'system' ? 'msg-system' : 'msg-customer');
+  msg.textContent = role === 'agent' ? `👤 Agent: ${text}` : text;
   stage.appendChild(msg);
   scrollStage();
 }
@@ -393,7 +430,8 @@ function simulateCall(){
   const biz = document.getElementById('bizName').value.trim() || 'Your Business';
   const type = document.getElementById('bizType').value;
   const afterHours = document.getElementById('afterHours').checked;
-  conv = { step:'awaiting_intent', biz, type, phone: randPhone(copy[type].prefix), rowStatus:null, rowAppt:null, apptTime:null };
+  conv = { step:'awaiting_intent', biz, type, phone: randPhone(copy[type].prefix), rowStatus:null, rowAppt:null, apptTime:null, agentMode:false };
+  setAgentModeUI(false);
 
   const stage = document.getElementById('phoneStage');
   stage.innerHTML = '';
@@ -470,6 +508,11 @@ function sendCustomerMessage(){
   addBubble('customer', text);
   document.getElementById('quickReplies').innerHTML = '';
 
+  if(conv.agentMode){
+    // AI is paused — a human is handling this conversation, so just wait for the agent to reply.
+    return;
+  }
+
   const typing = document.createElement('div');
   typing.className = 'typing-card';
   typing.id = 'typingIndicator2';
@@ -478,6 +521,42 @@ function sendCustomerMessage(){
   scrollStage();
 
   setTimeout(() => handleCustomerMessage(text), 1000 + Math.random()*500);
+}
+
+function setAgentModeUI(on){
+  const btn = document.getElementById('agentToggleBtn');
+  const row = document.getElementById('agentInputRow');
+  if(on){
+    btn.textContent = 'Hand back to AI';
+    btn.classList.add('outline');
+    row.style.display = 'flex';
+  } else {
+    btn.textContent = 'Take over chat';
+    btn.classList.remove('outline');
+    row.style.display = 'none';
+  }
+}
+
+function toggleAgentMode(){
+  if(conv.step === 'idle'){ showToast('Simulate a missed call first'); return; }
+  conv.agentMode = !conv.agentMode;
+  setAgentModeUI(conv.agentMode);
+  if(conv.agentMode){
+    addBubble('system', 'A live agent has joined the conversation');
+    showToast('👤 You are now replying live as the agent');
+    document.getElementById('quickReplies').innerHTML = '';
+  } else {
+    addBubble('system', 'AI has resumed the conversation');
+    showToast('🤖 Handed back to AI');
+  }
+}
+
+function sendAgentMessage(){
+  const input = document.getElementById('agentInput');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+  addBubble('agent', text);
 }
 
 function updateRowInLog(status, appt){
@@ -574,6 +653,7 @@ function handleCustomerMessage(text){
     showToast('🚨 Escalated to owner');
     if(conv.rowStatus) updateRowInLog('<span class="badge escalated">Escalated</span>');
     setQuickReplies([]);
+    if(!conv.agentMode){ conv.agentMode = true; setAgentModeUI(true); }
     return;
   }
 
@@ -671,7 +751,8 @@ function applyURLParams(){
 function resetDemo(){
   leadCount = 0; bookedCount = 0; completedCount = 0; reviewedCount = 0; busy = false;
   leadRows = [];
-  conv = { step:'idle', biz:'', type: document.getElementById('bizType').value, phone:'', rowStatus:null, rowAppt:null, apptTime:null };
+  conv = { step:'idle', biz:'', type: document.getElementById('bizType').value, phone:'', rowStatus:null, rowAppt:null, apptTime:null, agentMode:false };
+  setAgentModeUI(false);
   document.getElementById('simulateBtn').disabled = false;
   document.getElementById('yourAvg').textContent = '—';
   document.getElementById('logBody').innerHTML = '';
