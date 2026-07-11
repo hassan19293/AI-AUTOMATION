@@ -633,14 +633,37 @@ function handleCustomerMessage(text){
 
   if(conv.step === 'awaiting_time'){ confirmBooking(cfg, text); return; }
 
+  if(conv.step === 'done'){
+    const lower = text.toLowerCase();
+    if(/leave|sure|yes|ok/.test(lower)){
+      addBubble('business', `Wonderful — here's the link to leave a review: g.page/${conv.biz.toLowerCase().replace(/\s+/g,'')}/review (simulated link). Thanks again!`);
+      showToast('🔗 Google review link sent');
+    } else {
+      addBubble('business', `No problem at all — thanks again for stopping by, we'll see you next time!`);
+    }
+    setQuickReplies([]);
+    return;
+  }
+
   if(conv.step === 'awaiting_review'){
-    const stars = (text.match(/⭐/g) || []).length || (text.match(/\d/) ? parseInt(text.match(/\d/)[0]) : 5);
-    addBubble('business', `Thank you so much — that really helps us out! 🙏`);
+    const stars = (text.match(/⭐|★/g) || []).length || (text.match(/\d/) ? parseInt(text.match(/\d/)[0]) : 5);
+    const starCount = Math.min(stars, 5) || 5;
+
+    if(starCount >= 4){
+      addBubble('business', `Thank you for the feedback — we're glad you had a great experience at ${conv.biz}. If you have a moment, we'd really appreciate you sharing that on our Google profile as well.`);
+      updateRowInLog('<span class="badge reviewed">Reviewed</span>', `${conv.apptTime} · ${'★'.repeat(starCount)} · Google review requested`);
+      showToast(`⭐ New ${starCount}-star review — Google review requested`);
+      setQuickReplies(['Sure, I\'ll leave one', 'No thanks']);
+    } else {
+      addBubble('business', `Thank you for the honest feedback. We're sorry the experience wasn't what it should have been — I've shared this with our team directly so we can follow up and make it right.`);
+      updateRowInLog('<span class="badge escalated">Low review — escalated</span>', `${conv.apptTime} · ${'★'.repeat(starCount)}`);
+      showToast(`⚠️ ${starCount}-star review — escalated to owner`);
+      addBubble('system', `Escalated to ${conv.biz}'s owner for follow-up`);
+      if(!conv.agentMode){ conv.agentMode = true; setAgentModeUI(true); }
+      setQuickReplies([]);
+    }
     reviewedCount++;
     updateFunnel();
-    updateRowInLog('<span class="badge reviewed">Reviewed</span>', `${conv.apptTime} · ${'★'.repeat(Math.min(stars,5))}`);
-    showToast(`⭐ New ${Math.min(stars,5)}-star review`);
-    setQuickReplies([]);
     conv.step = 'done';
     return;
   }
