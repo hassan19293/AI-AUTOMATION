@@ -694,7 +694,7 @@ function handleCustomerMessage(text){
       if(!conv.agentMode){ conv.agentMode = true; setAgentModeUI(true); }
       setQuickReplies([]);
     } else {
-      addBubble('business', `Thank you for explaining — I completely understand, and I'm sorry it fell short this time. I've made a note on your file so our team is ready to make it right at your next visit. We'd genuinely love the chance to have you back.`);
+      addBubble('business', `Thank you for taking the time to share that with us — we appreciate your honesty. We've personally noted this on your file, and our team will be looking forward to giving you a truly great experience the next time you visit ${conv.biz}. We're confident we can turn this around for you.`);
       updateRowInLog('<span class="badge replied">Noted for next visit</span>');
       showToast('📝 Noted on customer profile for next visit');
       setQuickReplies(['Thank you', 'I appreciate that']);
