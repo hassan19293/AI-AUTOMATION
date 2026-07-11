@@ -409,6 +409,12 @@ function setQuickReplies(options){
   });
 }
 
+function classifySeverity(text){
+  const t = text.toLowerCase();
+  if(/unsafe|hurt|in pain|rude|unprofessional|never again|worst|disgusting|terrible|awful|yelled|discriminat|bleeding|injur|sick|allerg/.test(t)) return 'severe';
+  return 'mild';
+}
+
 function classifyIntent(text){
   const t = text.toLowerCase();
   if(/\b(complaint|unhappy|angry|upset|terrible|awful|refund|manager|disappointed|not happy)\b/.test(t)) return 'complaint';
@@ -664,16 +670,35 @@ function handleCustomerMessage(text){
       updateRowInLog('<span class="badge reviewed">Reviewed</span>', `${conv.apptTime} · ${'★'.repeat(starCount)} · Google review requested`);
       showToast(`⭐ New ${starCount}-star review — Google review requested`);
       setQuickReplies(['Sure, I\'ll leave one', 'No thanks']);
+      reviewedCount++;
+      updateFunnel();
+      conv.step = 'done';
     } else {
-      addBubble('business', `Thank you for the honest feedback. We're sorry the experience wasn't what it should have been — I've shared this with our team directly so we can follow up and make it right.`);
-      updateRowInLog('<span class="badge escalated">Low review — escalated</span>', `${conv.apptTime} · ${'★'.repeat(starCount)}`);
-      showToast(`⚠️ ${starCount}-star review — escalated to owner`);
-      addBubble('system', `Escalated to ${conv.biz}'s owner for follow-up`);
+      addBubble('business', `I'm sorry to hear the visit wasn't what it should have been. Would you mind telling me a bit more about what happened? We'd really like to make it right.`);
+      updateRowInLog('<span class="badge reviewed">Reviewed</span>', `${conv.apptTime} · ${'★'.repeat(starCount)} · Pending follow-up`);
+      showToast(`⭐ New ${starCount}-star review — asking for detail`);
+      setQuickReplies(['The wait was too long', 'Staff was unprofessional', 'It was a scheduling mix-up']);
+      reviewedCount++;
+      updateFunnel();
+      conv.step = 'review_followup';
+    }
+    return;
+  }
+
+  if(conv.step === 'review_followup'){
+    if(classifySeverity(text) === 'severe'){
+      addBubble('business', `I'm really sorry that happened — that's not the experience we want anyone to have. I'm connecting you with someone from our team directly so they can make this right.`);
+      addBubble('system', `Escalated to ${conv.biz}'s owner — serious complaint`);
+      showToast('🚨 Serious complaint — escalated to owner');
+      updateRowInLog('<span class="badge escalated">Escalated</span>');
       if(!conv.agentMode){ conv.agentMode = true; setAgentModeUI(true); }
       setQuickReplies([]);
+    } else {
+      addBubble('business', `Thank you for explaining — I completely understand, and I'm sorry it fell short this time. I've made a note on your file so our team is ready to make it right at your next visit. We'd genuinely love the chance to have you back.`);
+      updateRowInLog('<span class="badge replied">Noted for next visit</span>');
+      showToast('📝 Noted on customer profile for next visit');
+      setQuickReplies(['Thank you', 'I appreciate that']);
     }
-    reviewedCount++;
-    updateFunnel();
     conv.step = 'done';
     return;
   }
