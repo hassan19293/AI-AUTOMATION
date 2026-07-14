@@ -86,7 +86,23 @@
     color:var(--slate); font-family:'JetBrains Mono', monospace; font-size:12px; padding:9px 12px; border-radius:8px;
   }
 
-  .grid{ display:grid; grid-template-columns: 1fr 1.15fr; gap:28px; }
+  .roi-hero{
+    background:linear-gradient(135deg, rgba(95,158,127,0.12), rgba(255,255,255,0.02));
+    border:1px solid rgba(95,158,127,0.3); border-radius:16px; padding:28px 30px; margin-bottom:32px;
+  }
+  .roi-hero-copy h3{
+    font-family:'Fraunces', serif; font-weight:600; font-size:22px; color:var(--paper); margin:0 0 6px; letter-spacing:-0.01em;
+  }
+  .roi-hero-copy p{ font-size:14px; color:var(--slate); margin:0 0 20px; max-width:520px; line-height:1.5; }
+  .roi-hero .roi-note{ margin-top:16px; }
+
+  .demo-intro{ margin-bottom:22px; }
+  .demo-intro h2{
+    font-family:'Fraunces', serif; font-weight:600; font-size:26px; margin:0 0 8px; letter-spacing:-0.01em;
+  }
+  .demo-intro p{ font-size:15px; color:var(--slate); max-width:600px; line-height:1.55; margin:0; }
+
+  .grid{ display:grid; grid-template-columns: 1.15fr 1fr; gap:28px; }
   @media (max-width:820px){ .grid{ grid-template-columns: 1fr; } }
 
   .panel{ background:var(--ink-2); border:1px solid var(--line); border-radius:16px; padding:26px; position:relative; overflow:hidden; }
@@ -94,6 +110,11 @@
     font-family:'JetBrains Mono', monospace; font-size:12px; text-transform:uppercase;
     letter-spacing:0.1em; color:var(--slate); margin:0 0 18px;
   }
+  .panel-hero{
+    border:1px solid rgba(201,151,62,0.4);
+    box-shadow:0 0 0 1px rgba(201,151,62,0.08), 0 16px 40px rgba(0,0,0,0.25);
+  }
+  .panel-hero .phone-stage{ min-height:280px; max-height:460px; }
 
   .toast-stack{ position:absolute; top:14px; right:14px; display:flex; flex-direction:column; gap:8px; z-index:5; max-width:260px; }
   .toast{
@@ -282,6 +303,33 @@
     <div class="result-pill"><span class="dot"></span>Escalates complex conversations to you</div>
   </div>
 
+  <div class="roi-hero">
+    <div class="roi-hero-copy">
+      <h3>What missed calls are costing you</h3>
+      <p>Most calls that go to voicemail never call back — they call the next business on the list. Plug in your numbers.</p>
+    </div>
+    <div class="roi-grid">
+      <div class="roi-field">
+        <label>Avg. ticket price ($)</label>
+        <input type="number" id="roiTicket" value="140" min="0" oninput="calcROI()">
+      </div>
+      <div class="roi-field">
+        <label>Missed calls / month</label>
+        <input type="number" id="roiCalls" value="30" min="0" oninput="calcROI()">
+      </div>
+      <div class="roi-result">
+        <div class="num" id="roiOutput">$1,470/mo</div>
+        <div class="lbl">Estimated recovered revenue, at a 35% typical booking rate on captured leads</div>
+      </div>
+    </div>
+    <div class="roi-note">Rough estimate for illustration — actual conversion depends on the business, but this is the number that usually matters most in the room.</div>
+  </div>
+
+  <div class="demo-intro">
+    <h2>See it answer, in real time</h2>
+    <p>Set up a business below, then start a demo call. Reply as the customer on the left — watch the AI qualify, book, and sync the appointment on the right, live.</p>
+  </div>
+
   <div class="controls">
     <input id="bizName" type="text" placeholder="Business name" value="Bright Smile Dental" oninput="syncShareLink()">
     <select id="bizType" onchange="resetDemo(); syncShareLink();">
@@ -300,7 +348,7 @@
   </div>
 
   <div class="grid">
-    <div class="panel">
+    <div class="panel panel-hero">
       <h3>What the customer experiences</h3>
       <div class="phone-stage" id="phoneStage">
         <div class="empty-state">Nothing yet — click "Start demo call" above.</div>
@@ -377,24 +425,6 @@
       </div>
     </div>
 
-    <div class="panel roi-panel">
-      <h3>Estimated revenue recovered</h3>
-      <div class="roi-grid">
-        <div class="roi-field">
-          <label>Avg. ticket price ($)</label>
-          <input type="number" id="roiTicket" value="140" min="0" oninput="calcROI()">
-        </div>
-        <div class="roi-field">
-          <label>Missed calls / month</label>
-          <input type="number" id="roiCalls" value="30" min="0" oninput="calcROI()">
-        </div>
-        <div class="roi-result">
-          <div class="num" id="roiOutput">$1,470/mo</div>
-          <div class="lbl">Estimated recovered revenue, at a 35% typical booking rate on captured leads</div>
-        </div>
-      </div>
-      <div class="roi-note">Rough estimate for illustration — actual conversion depends on the business, but this is the number that usually matters most in the room.</div>
-    </div>
   </div>
 
   <footer>
