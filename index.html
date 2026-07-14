@@ -45,7 +45,16 @@
     line-height:1.08; margin:0 0 20px; max-width:760px; letter-spacing:-0.01em;
   }
   h1 em{ font-style:italic; color:var(--brass); }
-  .sub{ font-size:17px; color:var(--slate); max-width:600px; line-height:1.6; margin-bottom:32px; }
+  .sub{ font-size:17px; color:var(--slate); max-width:640px; line-height:1.6; margin-bottom:14px; }
+  .sub-strong{ font-size:17px; color:var(--paper); max-width:640px; line-height:1.6; margin-bottom:32px; }
+  .sub-strong b{ color:var(--brass); font-weight:600; }
+
+  .results-row{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:36px; }
+  .result-pill{
+    display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.04);
+    border:1px solid var(--line); border-radius:20px; padding:9px 15px 9px 12px; font-size:13px; color:var(--paper);
+  }
+  .result-pill .dot{ width:6px; height:6px; border-radius:50%; background:var(--sage); animation:none; flex-shrink:0; }
 
   .controls{ display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px; align-items:center; }
   .controls input[type=text], .controls select{
@@ -232,6 +241,26 @@
   .log-empty{ color:var(--slate); font-size:13.5px; padding:16px 4px; }
   .log-foot{ display:flex; justify-content:flex-end; margin-top:12px; }
 
+  /* Behind the Conversation flow */
+  .flow-panel{ grid-column: 1 / -1; margin-top:28px; }
+  .flow-row{ display:flex; align-items:center; gap:0; overflow-x:auto; padding-bottom:6px; }
+  .flow-step{
+    display:flex; flex-direction:column; align-items:center; text-align:center; min-width:128px; flex-shrink:0;
+  }
+  .flow-step .icon{
+    width:52px; height:52px; border-radius:14px; background:rgba(201,151,62,0.10); border:1px solid rgba(201,151,62,0.3);
+    display:flex; align-items:center; justify-content:center; margin-bottom:10px; font-size:22px;
+  }
+  .flow-step .label{ font-size:12.5px; font-weight:600; color:var(--paper); line-height:1.3; }
+  .flow-step .sub{ font-size:11px; color:var(--slate); margin-top:3px; max-width:0px; }
+  .flow-arrow{
+    flex-shrink:0; width:36px; height:1px; background:var(--line); position:relative; margin:0 4px 30px;
+  }
+  .flow-arrow::after{
+    content:''; position:absolute; right:0; top:50%; transform:translateY(-50%);
+    border-left:5px solid var(--slate); border-top:4px solid transparent; border-bottom:4px solid transparent;
+  }
+
   footer{
     margin-top:48px; padding-top:28px; border-top:1px solid var(--line); color:var(--slate); font-size:13px;
     display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
@@ -242,9 +271,16 @@
 <body>
 <div class="wrap">
 
-  <div class="eyebrow">Live demo · missed-call auto-response</div>
-  <h1>They called. You were busy.<br><em>Now they're booked anyway.</em></h1>
-  <p class="sub">Type in a real business, hit simulate, then reply as the customer. The AI books, syncs the calendar, sends a reminder, and follows up for a review — start to finish.</p>
+  <h1>They called.<br>You never missed <em>the opportunity.</em></h1>
+  <p class="sub-strong">An AI receptionist that answers every call, qualifies the lead, books the appointment, and hands off to your team — day or night. <b>Try it below</b>: simulate a missed call and reply as the customer to see the full conversation play out.</p>
+
+  <div class="results-row">
+    <div class="result-pill"><span class="dot"></span>Never miss a lead</div>
+    <div class="result-pill"><span class="dot"></span>Answers 24/7</div>
+    <div class="result-pill"><span class="dot"></span>Books appointments automatically</div>
+    <div class="result-pill"><span class="dot"></span>Cuts repetitive phone calls</div>
+    <div class="result-pill"><span class="dot"></span>Escalates complex conversations to you</div>
+  </div>
 
   <div class="controls">
     <input id="bizName" type="text" placeholder="Business name" value="Bright Smile Dental" oninput="syncShareLink()">
@@ -256,7 +292,7 @@
       <option value="gym">Gym / studio</option>
     </select>
     <label class="checkbox-label"><input type="checkbox" id="afterHours"> Simulate after-hours call</label>
-    <button class="btn" id="simulateBtn" onclick="simulateCall()">Simulate a missed call</button>
+    <button class="btn" id="simulateBtn" onclick="simulateCall()">Start demo call</button>
     <button class="btn ghost" onclick="resetDemo()">Reset</button>
   </div>
   <div class="share-row">
@@ -267,7 +303,7 @@
     <div class="panel">
       <h3>What the customer experiences</h3>
       <div class="phone-stage" id="phoneStage">
-        <div class="empty-state">Nothing yet — click "Simulate a missed call" above.</div>
+        <div class="empty-state">Nothing yet — click "Start demo call" above.</div>
       </div>
       <div class="quick-replies" id="quickReplies"></div>
       <div class="chat-input-row" id="chatInputRow" style="display:none;">
@@ -322,6 +358,23 @@
       </table>
       <div class="log-empty" id="logEmpty">No leads logged yet.</div>
       <div class="log-foot"><button class="btn ghost small" onclick="exportCSV()">Export CSV</button></div>
+    </div>
+
+    <div class="panel flow-panel">
+      <h3>Behind the conversation</h3>
+      <div class="flow-row">
+        <div class="flow-step"><div class="icon">📞</div><div class="label">Customer calls</div></div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step"><div class="icon">🤖</div><div class="label">AI answers</div></div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step"><div class="icon">💬</div><div class="label">Understands the request</div></div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step"><div class="icon">📅</div><div class="label">Books the appointment</div></div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step"><div class="icon">✅</div><div class="label">Sends confirmation</div></div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step"><div class="icon">🔄</div><div class="label">Updates your CRM</div></div>
+      </div>
     </div>
 
     <div class="panel roi-panel">
@@ -815,7 +868,7 @@ function resetDemo(){
   document.getElementById('lifecycleRow').style.display = 'none';
   document.getElementById('toastStack').innerHTML = '';
   document.getElementById('gcalSection').innerHTML = '<div class="gcal-empty">No appointments booked yet — synced events will appear here.</div>';
-  document.getElementById('phoneStage').innerHTML = '<div class="empty-state">Nothing yet — click "Simulate a missed call" above.</div>';
+  document.getElementById('phoneStage').innerHTML = '<div class="empty-state">Nothing yet — click "Start demo call" above.</div>';
   updateFunnel();
 }
 
