@@ -3,58 +3,165 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Never Miss Another Lead — AI Response Demo</title>
+<title>Buildifo — AI Voice Receptionist That Never Misses a Call</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#14213D;
-    --ink-2:#1E2E52;
+    --ink:#0E1730;
+    --ink-2:#182346;
+    --ink-3:#1E2E52;
     --paper:#FBF9F4;
     --brass:#C9973E;
+    --brass-soft:#DBAB58;
     --coral:#E2574C;
     --sage:#5F9E7F;
     --slate:#8791A8;
-    --line: rgba(255,255,255,0.10);
+    --slate-dim:#5D6785;
+    --line: rgba(255,255,255,0.09);
   }
   *{box-sizing:border-box;}
+  html{ scroll-behavior:smooth; }
   body{
     margin:0;
     background: var(--ink);
     color: var(--paper);
     font-family:'Inter', sans-serif;
     min-height:100vh;
+    -webkit-font-smoothing:antialiased;
   }
-  .wrap{ max-width:1100px; margin:0 auto; padding:56px 24px 80px; }
+  a{ color:inherit; }
+  .wrap{ max-width:1160px; margin:0 auto; padding:0 24px; }
+  section{ padding:96px 0; border-top:1px solid var(--line); }
+  section:first-of-type{ border-top:none; }
   .eyebrow{
-    font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:0.14em;
-    text-transform:uppercase; color:var(--brass); margin-bottom:18px;
-    display:flex; align-items:center; gap:10px;
+    font-family:'JetBrains Mono', monospace; font-size:11.5px; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--brass); margin-bottom:16px; font-weight:600;
   }
-  .eyebrow::before{
-    content:''; width:7px;height:7px;border-radius:50%; background:var(--coral);
-    box-shadow:0 0 0 0 rgba(226,87,76,0.6); animation:pulse 2s infinite;
-  }
-  @keyframes pulse{
-    0%{box-shadow:0 0 0 0 rgba(226,87,76,0.55);}
-    70%{box-shadow:0 0 0 8px rgba(226,87,76,0);}
-    100%{box-shadow:0 0 0 0 rgba(226,87,76,0);}
-  }
-  h1{
-    font-family:'Fraunces', serif; font-weight:600; font-size:clamp(32px, 5vw, 52px);
-    line-height:1.08; margin:0 0 20px; max-width:760px; letter-spacing:-0.01em;
-  }
-  h1 em{ font-style:italic; color:var(--brass); }
-  .sub{ font-size:17px; color:var(--slate); max-width:640px; line-height:1.6; margin-bottom:14px; }
-  .sub-strong{ font-size:17px; color:var(--paper); max-width:640px; line-height:1.6; margin-bottom:32px; }
-  .sub-strong b{ color:var(--brass); font-weight:600; }
+  h1,h2,h3{ font-family:'Fraunces', serif; font-weight:600; letter-spacing:-0.01em; margin:0; }
+  em{ font-style:italic; color:var(--brass); }
 
-  .results-row{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:36px; }
-  .result-pill{
-    display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.04);
-    border:1px solid var(--line); border-radius:20px; padding:9px 15px 9px 12px; font-size:13px; color:var(--paper);
+  /* reveal on scroll */
+  .reveal{ opacity:0; transform:translateY(16px); transition:opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:sticky; top:0; z-index:40; background:rgba(14,23,48,0.86); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
   }
-  .result-pill .dot{ width:6px; height:6px; border-radius:50%; background:var(--sage); animation:none; flex-shrink:0; }
+  .nav-inner{
+    max-width:1160px; margin:0 auto; padding:16px 24px; display:flex; align-items:center;
+    justify-content:space-between; gap:20px;
+  }
+  .logo{ font-family:'Fraunces', serif; font-weight:600; font-size:18px; letter-spacing:-0.01em; display:flex; align-items:center; gap:8px; }
+  .logo .mark{ width:9px; height:9px; border-radius:50%; background:var(--brass); display:inline-block; }
+  .nav-links{ display:flex; gap:28px; font-size:14px; color:var(--slate); }
+  .nav-links a{ text-decoration:none; transition:color 0.15s ease; }
+  .nav-links a:hover{ color:var(--paper); }
+  .nav-cta{ display:flex; gap:10px; }
+  @media (max-width:760px){ .nav-links{ display:none; } }
+
+  .btn{
+    background:var(--brass); color:var(--ink); border:none; font-family:'Inter', sans-serif;
+    font-weight:700; font-size:14px; padding:12px 22px; border-radius:9px; cursor:pointer;
+    transition:transform 0.15s ease, background 0.15s ease; text-decoration:none; display:inline-flex; align-items:center; gap:8px;
+  }
+  .btn:hover{ background:var(--brass-soft); transform:translateY(-1px); }
+  .btn:active{ transform:translateY(0px); }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; transform:none; }
+  .btn.small{ padding:10px 16px; font-size:13px; }
+  .btn.ghost{ background:transparent; color:var(--slate); border:1px solid var(--line); }
+  .btn.ghost:hover{ background:rgba(255,255,255,0.04); color:var(--paper); }
+  .btn.outline{ background:transparent; color:var(--brass); border:1px solid var(--brass); }
+  .btn.outline:hover{ background:rgba(201,151,62,0.10); }
+  .btn.on-dark{ background:transparent; color:var(--paper); border:1px solid rgba(255,255,255,0.25); }
+  .btn.on-dark:hover{ background:rgba(255,255,255,0.06); }
+
+  /* ---------- HERO ---------- */
+  .hero{ padding:88px 0 96px; border-top:none; }
+  .hero-grid{ display:grid; grid-template-columns:1.05fr 0.95fr; gap:56px; align-items:center; }
+  @media (max-width:900px){ .hero-grid{ grid-template-columns:1fr; } }
+  .hero h1{ font-size:clamp(34px, 4.6vw, 54px); line-height:1.06; margin-bottom:22px; max-width:600px; }
+  .hero .sub{ font-size:17px; color:var(--slate); max-width:480px; line-height:1.65; margin-bottom:32px; }
+  .hero-ctas{ display:flex; gap:12px; flex-wrap:wrap; }
+
+  .hero-card{
+    background:linear-gradient(165deg, var(--ink-3), var(--ink-2));
+    border:1px solid var(--line); border-radius:20px; padding:26px;
+    box-shadow:0 24px 60px rgba(0,0,0,0.35);
+  }
+  .hero-card-head{ display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--slate); margin-bottom:20px; }
+  .hero-card-head .live-dot{ width:7px;height:7px;border-radius:50%; background:var(--sage); box-shadow:0 0 0 0 rgba(95,158,127,0.6); animation:pulse-sage 2s infinite; }
+  @keyframes pulse-sage{ 0%{box-shadow:0 0 0 0 rgba(95,158,127,0.5);} 70%{box-shadow:0 0 0 8px rgba(95,158,127,0);} 100%{box-shadow:0 0 0 0 rgba(95,158,127,0);} }
+  .mock-step{ display:flex; align-items:center; gap:14px; padding:13px 0; }
+  .mock-step .num{
+    width:28px; height:28px; border-radius:8px; background:rgba(201,151,62,0.14); border:1px solid rgba(201,151,62,0.3);
+    display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0;
+  }
+  .mock-step .txt .t{ font-size:14.5px; font-weight:600; color:var(--paper); }
+  .mock-step .txt .d{ font-size:12px; color:var(--slate); margin-top:1px; }
+  .mock-connector{ width:1px; height:16px; background:var(--line); margin-left:14px; }
+  .mock-step.done .num{ background:rgba(95,158,127,0.18); border-color:rgba(95,158,127,0.35); color:var(--sage); }
+
+  /* ---------- TRUST STRIP ---------- */
+  .trust{ padding:44px 0; }
+  .trust-label{ font-size:12.5px; color:var(--slate-dim); text-align:center; margin-bottom:20px; font-family:'JetBrains Mono', monospace; letter-spacing:0.08em; text-transform:uppercase; }
+  .trust-row{ display:flex; flex-wrap:wrap; justify-content:center; gap:12px; }
+  .trust-pill{
+    font-size:14px; color:var(--paper); background:rgba(255,255,255,0.03); border:1px solid var(--line);
+    border-radius:20px; padding:9px 18px;
+  }
+
+  /* ---------- PROBLEM ---------- */
+  .problem-inner{ max-width:680px; }
+  .problem h2{ font-size:clamp(28px, 3.6vw, 40px); line-height:1.15; margin-bottom:20px; }
+  .problem p{ font-size:16.5px; color:var(--slate); line-height:1.7; margin:0 0 12px; }
+
+  /* ---------- FEATURES ---------- */
+  .feature-row{
+    display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:center; padding:52px 0;
+    border-top:1px solid var(--line);
+  }
+  .feature-row:first-of-type{ border-top:none; padding-top:8px; }
+  .feature-row.rev{ direction:rtl; }
+  .feature-row.rev > *{ direction:ltr; }
+  @media (max-width:820px){ .feature-row, .feature-row.rev{ grid-template-columns:1fr; direction:ltr; gap:24px; padding:36px 0; } }
+  .feature-index{ font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--brass); margin-bottom:12px; letter-spacing:0.08em; }
+  .feature-row h3{ font-size:25px; margin-bottom:12px; }
+  .feature-row p{ font-size:15px; color:var(--slate); line-height:1.65; margin:0 0 10px; }
+  .feature-benefit{ font-size:13.5px; color:var(--sage); font-weight:600; }
+  .feature-mock{
+    background:var(--ink-2); border:1px solid var(--line); border-radius:16px; padding:22px;
+  }
+  .feature-mock .mline{ display:flex; align-items:center; gap:10px; padding:9px 0; font-size:13.5px; color:var(--paper); }
+  .feature-mock .mline .ic{ width:22px; text-align:center; flex-shrink:0; }
+  .feature-mock .mline.dim{ color:var(--slate); }
+  .feature-mock .divider{ height:1px; background:var(--line); margin:6px 0; }
+
+  /* ---------- DEMO / ROI (functional section) ---------- */
+  .roi-hero{
+    background:linear-gradient(135deg, rgba(95,158,127,0.12), rgba(255,255,255,0.02));
+    border:1px solid rgba(95,158,127,0.3); border-radius:16px; padding:28px 30px; margin-bottom:36px;
+  }
+  .roi-hero-copy h3{ font-size:22px; color:var(--paper); margin:0 0 6px; }
+  .roi-hero-copy p{ font-size:14px; color:var(--slate); margin:0 0 20px; max-width:520px; line-height:1.5; font-family:'Inter',sans-serif; }
+  .roi-grid{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px; align-items:end; }
+  @media (max-width:820px){ .roi-grid{ grid-template-columns:1fr; } }
+  .roi-field label{ display:block; font-size:11.5px; color:var(--slate); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.05em; font-family:'JetBrains Mono', monospace; }
+  .roi-field input{
+    width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--line); color:var(--paper);
+    font-size:15px; padding:11px 14px; border-radius:8px; outline:none; font-family:'JetBrains Mono', monospace;
+  }
+  .roi-field input:focus{ border-color:var(--brass); }
+  .roi-result{ background:rgba(95,158,127,0.10); border:1px solid rgba(95,158,127,0.3); border-radius:10px; padding:14px 16px; }
+  .roi-result .num{ font-family:'JetBrains Mono', monospace; font-size:26px; font-weight:700; color:var(--sage); }
+  .roi-result .lbl{ font-size:11.5px; color:var(--slate); margin-top:4px; }
+  .roi-note{ font-size:12px; color:var(--slate); margin-top:16px; line-height:1.5; }
+
+  .demo-intro{ margin-bottom:26px; max-width:640px; }
+  .demo-intro h2{ font-size:clamp(26px, 3vw, 32px); margin:0 0 10px; }
+  .demo-intro p{ font-size:15px; color:var(--slate); line-height:1.55; margin:0; }
 
   .controls{ display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px; align-items:center; }
   .controls input[type=text], .controls select{
@@ -68,47 +175,19 @@
     background:var(--ink-2); border:1px solid var(--line); padding:11px 14px; border-radius:8px; cursor:pointer;
   }
   .checkbox-label input{ accent-color:var(--brass); }
-  .btn{
-    background:var(--brass); color:var(--ink); border:none; font-family:'Inter', sans-serif;
-    font-weight:700; font-size:14px; padding:12px 22px; border-radius:8px; cursor:pointer;
-    transition:transform 0.15s ease, background 0.15s ease;
-  }
-  .btn:hover{ background:#DBAB58; transform:translateY(-1px); }
-  .btn:active{ transform:translateY(0px); }
-  .btn:disabled{ opacity:0.5; cursor:not-allowed; transform:none; }
-  .btn.small{ padding:10px 16px; font-size:13px; }
-  .btn.ghost{ background:transparent; color:var(--slate); border:1px solid var(--line); }
-  .btn.outline{ background:transparent; color:var(--brass); border:1px solid var(--brass); }
-  .btn.outline:hover{ background:rgba(201,151,62,0.10); }
-  .share-row{ margin-bottom:36px; }
+  .share-row{ margin-bottom:32px; }
   .share-row input{
     width:100%; max-width:520px; background:rgba(255,255,255,0.03); border:1px dashed var(--line);
     color:var(--slate); font-family:'JetBrains Mono', monospace; font-size:12px; padding:9px 12px; border-radius:8px;
   }
 
-  .roi-hero{
-    background:linear-gradient(135deg, rgba(95,158,127,0.12), rgba(255,255,255,0.02));
-    border:1px solid rgba(95,158,127,0.3); border-radius:16px; padding:28px 30px; margin-bottom:32px;
-  }
-  .roi-hero-copy h3{
-    font-family:'Fraunces', serif; font-weight:600; font-size:22px; color:var(--paper); margin:0 0 6px; letter-spacing:-0.01em;
-  }
-  .roi-hero-copy p{ font-size:14px; color:var(--slate); margin:0 0 20px; max-width:520px; line-height:1.5; }
-  .roi-hero .roi-note{ margin-top:16px; }
-
-  .demo-intro{ margin-bottom:22px; }
-  .demo-intro h2{
-    font-family:'Fraunces', serif; font-weight:600; font-size:26px; margin:0 0 8px; letter-spacing:-0.01em;
-  }
-  .demo-intro p{ font-size:15px; color:var(--slate); max-width:600px; line-height:1.55; margin:0; }
-
   .grid{ display:grid; grid-template-columns: 1.15fr 1fr; gap:28px; }
   @media (max-width:820px){ .grid{ grid-template-columns: 1fr; } }
 
   .panel{ background:var(--ink-2); border:1px solid var(--line); border-radius:16px; padding:26px; position:relative; overflow:hidden; }
-  .panel h3{
+  .panel h3.k{
     font-family:'JetBrains Mono', monospace; font-size:12px; text-transform:uppercase;
-    letter-spacing:0.1em; color:var(--slate); margin:0 0 18px;
+    letter-spacing:0.1em; color:var(--slate); margin:0 0 18px; font-weight:600;
   }
   .panel-hero{
     border:1px solid rgba(201,151,62,0.4);
@@ -195,7 +274,6 @@
   .funnel-step .num{ font-family:'JetBrains Mono', monospace; font-size:19px; font-weight:600; color:var(--paper); }
   .funnel-step .lbl{ font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--slate); margin-top:3px; }
 
-  /* live agent takeover */
   .agent-panel{
     background:rgba(226,87,76,0.06); border:1px solid rgba(226,87,76,0.25); border-radius:10px;
     padding:14px 16px; margin-bottom:20px;
@@ -209,14 +287,7 @@
     font-family:'Inter', sans-serif; font-size:13.5px; padding:10px 13px; border-radius:8px; outline:none;
   }
   .agent-input-row input:focus{ border-color:var(--coral); }
-  .agent-status{
-    font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;
-    padding:3px 8px; border-radius:6px;
-  }
-  .agent-status.off{ background:rgba(255,255,255,0.06); color:var(--slate); }
-  .agent-status.on{ background:rgba(226,87,76,0.2); color:var(--coral); }
 
-  /* google calendar card */
   .gcal-card{
     display:flex; gap:12px; align-items:flex-start; background:rgba(255,255,255,0.03);
     border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:20px;
@@ -229,21 +300,6 @@
     padding:2px 8px; border-radius:6px; display:inline-block; margin-top:6px;
   }
   .gcal-empty{ font-size:13px; color:var(--slate); }
-
-  /* ROI calculator */
-  .roi-panel{ grid-column: 1 / -1; margin-top:28px; }
-  .roi-grid{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px; align-items:end; }
-  @media (max-width:820px){ .roi-grid{ grid-template-columns:1fr; } }
-  .roi-field label{ display:block; font-size:11.5px; color:var(--slate); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.05em; font-family:'JetBrains Mono', monospace; }
-  .roi-field input{
-    width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--line); color:var(--paper);
-    font-size:15px; padding:11px 14px; border-radius:8px; outline:none; font-family:'JetBrains Mono', monospace;
-  }
-  .roi-field input:focus{ border-color:var(--brass); }
-  .roi-result{ background:rgba(95,158,127,0.10); border:1px solid rgba(95,158,127,0.3); border-radius:10px; padding:14px 16px; }
-  .roi-result .num{ font-family:'JetBrains Mono', monospace; font-size:26px; font-weight:700; color:var(--sage); }
-  .roi-result .lbl{ font-size:11.5px; color:var(--slate); margin-top:4px; }
-  .roi-note{ font-size:12px; color:var(--slate); margin-top:14px; line-height:1.5; }
 
   table{ width:100%; border-collapse:collapse; font-size:12.5px; }
   th{
@@ -262,176 +318,468 @@
   .log-empty{ color:var(--slate); font-size:13.5px; padding:16px 4px; }
   .log-foot{ display:flex; justify-content:flex-end; margin-top:12px; }
 
-  /* Behind the Conversation flow */
-  .flow-panel{ grid-column: 1 / -1; margin-top:28px; }
-  .flow-row{ display:flex; align-items:center; gap:0; overflow-x:auto; padding-bottom:6px; }
-  .flow-step{
-    display:flex; flex-direction:column; align-items:center; text-align:center; min-width:128px; flex-shrink:0;
+  /* ---------- HOW IT WORKS ---------- */
+  .how-head{ text-align:center; max-width:560px; margin:0 auto 52px; }
+  .how-head h2{ font-size:clamp(28px, 3.4vw, 36px); margin-bottom:10px; }
+  .how-head p{ font-size:15.5px; color:var(--slate); line-height:1.6; }
+  .how-row{ display:flex; align-items:flex-start; gap:0; overflow-x:auto; padding-bottom:8px; }
+  .how-step{ display:flex; flex-direction:column; align-items:center; text-align:center; min-width:160px; flex-shrink:0; }
+  .how-step .badge-num{
+    width:44px; height:44px; border-radius:12px; background:rgba(201,151,62,0.12); border:1px solid rgba(201,151,62,0.35);
+    display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono', monospace; font-weight:700;
+    color:var(--brass); font-size:16px; margin-bottom:14px;
   }
-  .flow-step .icon{
-    width:52px; height:52px; border-radius:14px; background:rgba(201,151,62,0.10); border:1px solid rgba(201,151,62,0.3);
-    display:flex; align-items:center; justify-content:center; margin-bottom:10px; font-size:22px;
-  }
-  .flow-step .label{ font-size:12.5px; font-weight:600; color:var(--paper); line-height:1.3; }
-  .flow-step .sub{ font-size:11px; color:var(--slate); margin-top:3px; max-width:0px; }
-  .flow-arrow{
-    flex-shrink:0; width:36px; height:1px; background:var(--line); position:relative; margin:0 4px 30px;
-  }
-  .flow-arrow::after{
+  .how-step .t{ font-size:15px; font-weight:600; color:var(--paper); margin-bottom:6px; }
+  .how-step .d{ font-size:12.5px; color:var(--slate); line-height:1.5; max-width:150px; }
+  .how-arrow{ flex-shrink:0; width:52px; height:1px; background:var(--line); position:relative; margin:22px 6px 0; }
+  .how-arrow::after{
     content:''; position:absolute; right:0; top:50%; transform:translateY(-50%);
-    border-left:5px solid var(--slate); border-top:4px solid transparent; border-bottom:4px solid transparent;
+    border-left:6px solid var(--slate); border-top:4px solid transparent; border-bottom:4px solid transparent;
   }
+  @media (max-width:760px){ .how-row{ flex-direction:column; align-items:flex-start; } .how-arrow{ width:1px; height:26px; margin:4px 0 4px 22px; } .how-arrow::after{ right:-3px; top:auto; bottom:0; transform:rotate(90deg); } }
 
-  footer{
-    margin-top:48px; padding-top:28px; border-top:1px solid var(--line); color:var(--slate); font-size:13px;
-    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+  /* ---------- INDUSTRIES ---------- */
+  .ind-head{ max-width:600px; margin-bottom:44px; }
+  .ind-head h2{ font-size:clamp(28px, 3.4vw, 36px); margin-bottom:10px; }
+  .ind-head p{ font-size:15.5px; color:var(--slate); line-height:1.6; }
+  .ind-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
+  @media (max-width:820px){ .ind-grid{ grid-template-columns:repeat(2, 1fr); } }
+  @media (max-width:520px){ .ind-grid{ grid-template-columns:1fr; } }
+  .ind-card{
+    background:var(--ink-2); border:1px solid var(--line); border-radius:14px; padding:22px 20px;
+    transition:border-color 0.15s ease, transform 0.15s ease;
   }
-  footer b{ color:var(--paper); }
+  .ind-card:hover{ border-color:rgba(201,151,62,0.4); transform:translateY(-2px); }
+  .ind-card .ic{ font-size:22px; margin-bottom:12px; }
+  .ind-card .t{ font-size:15px; font-weight:600; color:var(--paper); }
+
+  /* ---------- RESULTS ---------- */
+  .results-inner{ display:grid; grid-template-columns:0.9fr 1.1fr; gap:56px; align-items:center; }
+  @media (max-width:820px){ .results-inner{ grid-template-columns:1fr; gap:28px; } }
+  .results-inner h2{ font-size:clamp(28px, 3.4vw, 36px); margin-bottom:14px; max-width:420px; }
+  .results-inner > div > p{ font-size:15.5px; color:var(--slate); line-height:1.6; max-width:420px; }
+  .results-list{ display:flex; flex-direction:column; gap:2px; }
+  .result-line{
+    display:flex; align-items:center; gap:14px; padding:16px 0; border-top:1px solid var(--line); font-size:16px; color:var(--paper);
+  }
+  .result-line:first-child{ border-top:none; }
+  .result-line .check{ color:var(--sage); font-size:16px; flex-shrink:0; }
+
+  /* ---------- FAQ ---------- */
+  .faq-head{ max-width:520px; margin-bottom:36px; }
+  .faq-head h2{ font-size:clamp(28px, 3.4vw, 36px); margin-bottom:10px; }
+  .faq-list{ max-width:760px; }
+  .faq-item{ border-top:1px solid var(--line); }
+  .faq-item:last-child{ border-bottom:1px solid var(--line); }
+  .faq-q{
+    width:100%; text-align:left; background:none; border:none; color:var(--paper); cursor:pointer;
+    font-family:'Inter', sans-serif; font-size:16px; font-weight:600; padding:20px 4px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+  }
+  .faq-q .plus{ font-family:'JetBrains Mono', monospace; color:var(--brass); font-size:18px; flex-shrink:0; transition:transform 0.2s ease; }
+  .faq-item.open .faq-q .plus{ transform:rotate(45deg); }
+  .faq-a{ max-height:0; overflow:hidden; transition:max-height 0.25s ease; }
+  .faq-item.open .faq-a{ max-height:200px; }
+  .faq-a p{ font-size:14.5px; color:var(--slate); line-height:1.65; padding:0 4px 20px; margin:0; max-width:640px; }
+
+  /* ---------- FINAL CTA ---------- */
+  .final-cta{ text-align:center; }
+  .final-cta h2{ font-size:clamp(30px, 4vw, 44px); margin-bottom:14px; }
+  .final-cta p{ font-size:16px; color:var(--slate); max-width:520px; margin:0 auto 32px; line-height:1.6; }
+  .final-cta-btns{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+
+  /* ---------- FOOTER ---------- */
+  footer{ padding:40px 0; }
+  .footer-inner{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+  .footer-links{ display:flex; gap:22px; font-size:13.5px; color:var(--slate); flex-wrap:wrap; }
+  .footer-links a{ text-decoration:none; }
+  .footer-links a:hover{ color:var(--paper); }
+  .footer-note{ font-size:12.5px; color:var(--slate-dim); }
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <h1>They called.<br>You never missed <em>the opportunity.</em></h1>
-  <p class="sub-strong">An AI receptionist that answers every call, qualifies the lead, books the appointment, and hands off to your team — day or night. <b>Try it below</b>: simulate a missed call and reply as the customer to see the full conversation play out.</p>
-
-  <div class="results-row">
-    <div class="result-pill"><span class="dot"></span>Never miss a lead</div>
-    <div class="result-pill"><span class="dot"></span>Answers 24/7</div>
-    <div class="result-pill"><span class="dot"></span>Books appointments automatically</div>
-    <div class="result-pill"><span class="dot"></span>Cuts repetitive phone calls</div>
-    <div class="result-pill"><span class="dot"></span>Escalates complex conversations to you</div>
-  </div>
-
-  <div class="roi-hero">
-    <div class="roi-hero-copy">
-      <h3>What missed calls are costing you</h3>
-      <p>Most calls that go to voicemail never call back — they call the next business on the list. Plug in your numbers.</p>
+<nav>
+  <div class="nav-inner">
+    <div class="logo"><span class="mark"></span>Buildifo</div>
+    <div class="nav-links">
+      <a href="#features">Product</a>
+      <a href="#demo">Live Demo</a>
+      <a href="#industries">Industries</a>
+      <a href="#faq">FAQ</a>
     </div>
-    <div class="roi-grid">
-      <div class="roi-field">
-        <label>Avg. ticket price ($)</label>
-        <input type="number" id="roiTicket" value="140" min="0" oninput="calcROI()">
-      </div>
-      <div class="roi-field">
-        <label>Missed calls / month</label>
-        <input type="number" id="roiCalls" value="30" min="0" oninput="calcROI()">
-      </div>
-      <div class="roi-result">
-        <div class="num" id="roiOutput">$1,470/mo</div>
-        <div class="lbl">Estimated recovered revenue, at a 35% typical booking rate on captured leads</div>
+    <div class="nav-cta">
+      <a href="#demo" class="btn small">Try Live Demo</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow">AI Voice Receptionist</div>
+      <h1>They called.<br>You never missed <em>the opportunity.</em></h1>
+      <p class="sub">An AI voice receptionist that answers calls, qualifies leads, books appointments, answers common questions, and hands complex conversations to your team — day or night.</p>
+      <div class="hero-ctas">
+        <a href="#demo" class="btn">Try Live Demo</a>
+        <a href="#how-it-works" class="btn on-dark">Watch How It Works</a>
       </div>
     </div>
-    <div class="roi-note">Rough estimate for illustration — actual conversion depends on the business, but this is the number that usually matters most in the room.</div>
+    <div class="hero-card reveal">
+      <div class="hero-card-head"><span class="live-dot"></span>Live call, start to finish</div>
+      <div class="mock-step done"><div class="num">📞</div><div class="txt"><div class="t">Incoming call</div><div class="d">Missed at the front desk</div></div></div>
+      <div class="mock-connector"></div>
+      <div class="mock-step done"><div class="num">🤖</div><div class="txt"><div class="t">AI speaking</div><div class="d">Understands the request, offers times</div></div></div>
+      <div class="mock-connector"></div>
+      <div class="mock-step done"><div class="num">📅</div><div class="txt"><div class="t">Appointment booked</div><div class="d">Synced straight to the calendar</div></div></div>
+      <div class="mock-connector"></div>
+      <div class="mock-step done"><div class="num">✅</div><div class="txt"><div class="t">Confirmation sent</div><div class="d">Customer gets a text, you get a notification</div></div></div>
+    </div>
   </div>
+</section>
 
-  <div class="demo-intro">
-    <h2>See it answer, in real time</h2>
-    <p>Set up a business below, then start a demo call. Reply as the customer on the left — watch the AI qualify, book, and sync the appointment on the right, live.</p>
+<section class="trust reveal">
+  <div class="wrap">
+    <div class="trust-label">Perfect for</div>
+    <div class="trust-row">
+      <span class="trust-pill">Clinics</span>
+      <span class="trust-pill">Restaurants</span>
+      <span class="trust-pill">Real Estate</span>
+      <span class="trust-pill">Law Firms</span>
+      <span class="trust-pill">Salons</span>
+      <span class="trust-pill">Home Services</span>
+      <span class="trust-pill">Agencies</span>
+    </div>
   </div>
+</section>
 
-  <div class="controls">
-    <input id="bizName" type="text" placeholder="Business name" value="Bright Smile Dental" oninput="syncShareLink()">
-    <select id="bizType" onchange="resetDemo(); syncShareLink();">
-      <option value="dental">Dental practice</option>
-      <option value="salon">Hair salon</option>
-      <option value="restaurant">Restaurant</option>
-      <option value="realestate">Real estate agent</option>
-      <option value="gym">Gym / studio</option>
-    </select>
-    <label class="checkbox-label"><input type="checkbox" id="afterHours"> Simulate after-hours call</label>
-    <button class="btn" id="simulateBtn" onclick="simulateCall()">Start demo call</button>
-    <button class="btn ghost" onclick="resetDemo()">Reset</button>
+<section class="problem">
+  <div class="wrap problem-inner reveal">
+    <h2>Every missed call is a missed customer.</h2>
+    <p>Businesses lose customers because nobody answers every phone call. A prospect calls once — if it goes to voicemail, most don't call back. They call the next name on the list.</p>
+    <p>An AI receptionist answers instantly, every time, day and night, so that call becomes a booking instead of a bounce.</p>
   </div>
-  <div class="share-row">
-    <input id="shareLink" type="text" readonly onclick="this.select()">
-  </div>
+</section>
 
-  <div class="grid">
-    <div class="panel panel-hero">
-      <h3>What the customer experiences</h3>
-      <div class="phone-stage" id="phoneStage">
-        <div class="empty-state">Nothing yet — click "Start demo call" above.</div>
+<section id="features">
+  <div class="wrap">
+    <div class="how-head reveal" style="margin-bottom:8px;">
+      <div class="eyebrow" style="text-align:center;">What it does</div>
+      <h2>Six jobs, handled automatically</h2>
+      <p>Everything a great front-desk hire would do — answering, qualifying, booking, and knowing when to hand off.</p>
+    </div>
+
+    <div class="feature-row reveal">
+      <div>
+        <div class="feature-index">01 / 06</div>
+        <h3>24/7 Call Answering</h3>
+        <p>Every call gets picked up in seconds — nights, weekends, lunch rushes, all of it.</p>
+        <div class="feature-benefit">Benefit: no more voicemail, no more lost leads.</div>
       </div>
-      <div class="quick-replies" id="quickReplies"></div>
-      <div class="chat-input-row" id="chatInputRow" style="display:none;">
-        <input id="chatInput" type="text" placeholder="Type as the customer..." onkeydown="if(event.key==='Enter')sendCustomerMessage()">
-        <button class="btn small" onclick="sendCustomerMessage()">Send</button>
-      </div>
-      <div class="lifecycle-row" id="lifecycleRow" style="display:none;">
-        <button class="btn outline small" id="lifecycleBtn" onclick="advanceLifecycle()"></button>
+      <div class="feature-mock">
+        <div class="mline"><span class="ic">📞</span> Incoming call — 9:42 PM</div>
+        <div class="divider"></div>
+        <div class="mline"><span class="ic">🤖</span> Answered in 0.8s</div>
+        <div class="mline dim"><span class="ic">💬</span> "Thanks for calling — how can I help?"</div>
       </div>
     </div>
 
-    <div class="panel">
-      <div class="toast-stack" id="toastStack"></div>
-      <h3>What the business owner sees</h3>
+    <div class="feature-row rev reveal">
+      <div>
+        <div class="feature-index">02 / 06</div>
+        <h3>Appointment Scheduling</h3>
+        <p>The AI checks real availability and books the slot the customer wants, no back-and-forth.</p>
+        <div class="feature-benefit">Benefit: appointments fill themselves in.</div>
+      </div>
+      <div class="feature-mock">
+        <div class="mline"><span class="ic">📅</span> Tomorrow, 10:00 AM — open</div>
+        <div class="mline"><span class="ic">📅</span> Tomorrow, 1:00 PM — open</div>
+        <div class="divider"></div>
+        <div class="mline"><span class="ic">✅</span> Booked for 1:00 PM</div>
+      </div>
+    </div>
 
-      <div class="agent-panel">
-        <div class="agent-panel-head">
-          <div>
-            <div class="lbl">Live agent takeover</div>
-            <div class="agent-panel-sub">Jump in and reply as a real person any time — the AI pauses while you're active.</div>
+    <div class="feature-row reveal">
+      <div>
+        <div class="feature-index">03 / 06</div>
+        <h3>Lead Qualification</h3>
+        <p>Asks the right questions upfront, so your team only spends time on leads worth following up.</p>
+        <div class="feature-benefit">Benefit: fewer wasted callbacks.</div>
+      </div>
+      <div class="feature-mock">
+        <div class="mline"><span class="ic">💬</span> "Is this your first visit with us?"</div>
+        <div class="mline"><span class="ic">💬</span> "What's bringing you in?"</div>
+        <div class="divider"></div>
+        <div class="mline"><span class="ic">🏷️</span> Tagged: new patient, urgent</div>
+      </div>
+    </div>
+
+    <div class="feature-row rev reveal">
+      <div>
+        <div class="feature-index">04 / 06</div>
+        <h3>FAQ Responses</h3>
+        <p>Hours, pricing, location, parking — the questions your team answers fifty times a week, answered instantly.</p>
+        <div class="feature-benefit">Benefit: staff stop repeating themselves.</div>
+      </div>
+      <div class="feature-mock">
+        <div class="mline"><span class="ic">❓</span> "What are your hours?"</div>
+        <div class="mline dim"><span class="ic">🤖</span> "Mon–Fri 8am–5pm, Sat 9am–1pm"</div>
+      </div>
+    </div>
+
+    <div class="feature-row reveal">
+      <div>
+        <div class="feature-index">05 / 06</div>
+        <h3>CRM Integration</h3>
+        <p>Every call, booking, and note lands in your existing calendar and lead log automatically.</p>
+        <div class="feature-benefit">Benefit: no manual data entry.</div>
+      </div>
+      <div class="feature-mock">
+        <div class="mline"><span class="ic">🔄</span> Lead created</div>
+        <div class="mline"><span class="ic">🔄</span> Calendar synced</div>
+        <div class="mline"><span class="ic">🔄</span> Status updated</div>
+      </div>
+    </div>
+
+    <div class="feature-row rev reveal">
+      <div>
+        <div class="feature-index">06 / 06</div>
+        <h3>Human Transfer</h3>
+        <p>Complaints, emergencies, and anything nuanced get routed to a real person immediately — the AI knows its limits.</p>
+        <div class="feature-benefit">Benefit: nothing sensitive gets mishandled.</div>
+      </div>
+      <div class="feature-mock">
+        <div class="mline"><span class="ic">⚠️</span> Complaint detected</div>
+        <div class="divider"></div>
+        <div class="mline"><span class="ic">🚨</span> Escalated to owner</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="demo">
+  <div class="wrap">
+    <div class="roi-hero reveal">
+      <div class="roi-hero-copy">
+        <h3>What missed calls are costing you</h3>
+        <p>Most calls that go to voicemail never call back — they call the next business on the list. Plug in your numbers.</p>
+      </div>
+      <div class="roi-grid">
+        <div class="roi-field">
+          <label>Avg. ticket price ($)</label>
+          <input type="number" id="roiTicket" value="140" min="0" oninput="calcROI()">
+        </div>
+        <div class="roi-field">
+          <label>Missed calls / month</label>
+          <input type="number" id="roiCalls" value="30" min="0" oninput="calcROI()">
+        </div>
+        <div class="roi-result">
+          <div class="num" id="roiOutput">$1,470/mo</div>
+          <div class="lbl">Estimated recovered revenue, at a 35% typical booking rate on captured leads</div>
+        </div>
+      </div>
+      <div class="roi-note">Rough estimate for illustration — actual conversion depends on the business, but this is the number that usually matters most in the room.</div>
+    </div>
+
+    <div class="demo-intro reveal">
+      <div class="eyebrow">Live demo</div>
+      <h2>See it answer, in real time</h2>
+      <p>Set up a business below, then start a demo call. Reply as the customer on the left — watch the AI qualify, book, and sync the appointment on the right, live.</p>
+    </div>
+
+    <div class="controls">
+      <input id="bizName" type="text" placeholder="Business name" value="Bright Smile Dental" oninput="syncShareLink()">
+      <select id="bizType" onchange="resetDemo(); syncShareLink();">
+        <option value="dental">Dental practice</option>
+        <option value="salon">Hair salon</option>
+        <option value="restaurant">Restaurant</option>
+        <option value="realestate">Real estate agent</option>
+        <option value="gym">Gym / studio</option>
+      </select>
+      <label class="checkbox-label"><input type="checkbox" id="afterHours"> Simulate after-hours call</label>
+      <button class="btn" id="simulateBtn" onclick="simulateCall()">Start demo call</button>
+      <button class="btn ghost" onclick="resetDemo()">Reset</button>
+    </div>
+    <div class="share-row">
+      <input id="shareLink" type="text" readonly onclick="this.select()">
+    </div>
+
+    <div class="grid">
+      <div class="panel panel-hero">
+        <h3 class="k">What the customer experiences</h3>
+        <div class="phone-stage" id="phoneStage">
+          <div class="empty-state">Nothing yet — click "Start demo call" above.</div>
+        </div>
+        <div class="quick-replies" id="quickReplies"></div>
+        <div class="chat-input-row" id="chatInputRow" style="display:none;">
+          <input id="chatInput" type="text" placeholder="Type as the customer..." onkeydown="if(event.key==='Enter')sendCustomerMessage()">
+          <button class="btn small" onclick="sendCustomerMessage()">Send</button>
+        </div>
+        <div class="lifecycle-row" id="lifecycleRow" style="display:none;">
+          <button class="btn outline small" id="lifecycleBtn" onclick="advanceLifecycle()"></button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="toast-stack" id="toastStack"></div>
+        <h3 class="k">What the business owner sees</h3>
+
+        <div class="agent-panel">
+          <div class="agent-panel-head">
+            <div>
+              <div class="lbl">Live agent takeover</div>
+              <div class="agent-panel-sub">Jump in and reply as a real person any time — the AI pauses while you're active.</div>
+            </div>
+            <button class="btn small" id="agentToggleBtn" onclick="toggleAgentMode()">Take over chat</button>
           </div>
-          <button class="btn small" id="agentToggleBtn" onclick="toggleAgentMode()">Take over chat</button>
+          <div class="agent-input-row" id="agentInputRow" style="display:none;">
+            <input id="agentInput" type="text" placeholder="Type as the human agent..." onkeydown="if(event.key==='Enter')sendAgentMessage()">
+            <button class="btn small" onclick="sendAgentMessage()">Send</button>
+          </div>
         </div>
-        <div class="agent-input-row" id="agentInputRow" style="display:none;">
-          <input id="agentInput" type="text" placeholder="Type as the human agent..." onkeydown="if(event.key==='Enter')sendAgentMessage()">
-          <button class="btn small" onclick="sendAgentMessage()">Send</button>
+
+        <div class="stat-row">
+          <div class="stat lose"><div class="num">~47 hrs</div><div class="lbl">Industry average response time</div></div>
+          <div class="stat win"><div class="num" id="yourAvg">—</div><div class="lbl">This system's response time</div></div>
         </div>
-      </div>
 
-      <div class="stat-row">
-        <div class="stat lose"><div class="num">~47 hrs</div><div class="lbl">Industry average response time</div></div>
-        <div class="stat win"><div class="num" id="yourAvg">—</div><div class="lbl">This system's response time</div></div>
-      </div>
+        <div class="funnel" id="funnel">
+          <div class="funnel-step"><div class="num" id="fMissed">0</div><div class="lbl">Missed</div></div>
+          <div class="funnel-step"><div class="num" id="fReplied">0</div><div class="lbl">Replied</div></div>
+          <div class="funnel-step"><div class="num" id="fBooked">0</div><div class="lbl">Booked</div></div>
+          <div class="funnel-step"><div class="num" id="fCompleted">0</div><div class="lbl">Completed</div></div>
+          <div class="funnel-step"><div class="num" id="fReviewed">0</div><div class="lbl">Reviewed</div></div>
+        </div>
 
-      <div class="funnel" id="funnel">
-        <div class="funnel-step"><div class="num" id="fMissed">0</div><div class="lbl">Missed</div></div>
-        <div class="funnel-step"><div class="num" id="fReplied">0</div><div class="lbl">Replied</div></div>
-        <div class="funnel-step"><div class="num" id="fBooked">0</div><div class="lbl">Booked</div></div>
-        <div class="funnel-step"><div class="num" id="fCompleted">0</div><div class="lbl">Completed</div></div>
-        <div class="funnel-step"><div class="num" id="fReviewed">0</div><div class="lbl">Reviewed</div></div>
-      </div>
+        <h3 class="k">Google Calendar <span style="font-weight:400; text-transform:none; letter-spacing:0;">(simulated)</span></h3>
+        <div id="gcalSection">
+          <div class="gcal-empty">No appointments booked yet — synced events will appear here.</div>
+        </div>
 
-      <h3>Google Calendar <span style="font-weight:400; text-transform:none; letter-spacing:0;">(simulated)</span></h3>
-      <div id="gcalSection">
-        <div class="gcal-empty">No appointments booked yet — synced events will appear here.</div>
-      </div>
-
-      <h3 style="margin-top:6px;">Lead log</h3>
-      <table id="logTable">
-        <thead><tr><th>Time</th><th>Phone</th><th>Status</th><th>Appt</th></tr></thead>
-        <tbody id="logBody"></tbody>
-      </table>
-      <div class="log-empty" id="logEmpty">No leads logged yet.</div>
-      <div class="log-foot"><button class="btn ghost small" onclick="exportCSV()">Export CSV</button></div>
-    </div>
-
-    <div class="panel flow-panel">
-      <h3>Behind the conversation</h3>
-      <div class="flow-row">
-        <div class="flow-step"><div class="icon">📞</div><div class="label">Customer calls</div></div>
-        <div class="flow-arrow"></div>
-        <div class="flow-step"><div class="icon">🤖</div><div class="label">AI answers</div></div>
-        <div class="flow-arrow"></div>
-        <div class="flow-step"><div class="icon">💬</div><div class="label">Understands the request</div></div>
-        <div class="flow-arrow"></div>
-        <div class="flow-step"><div class="icon">📅</div><div class="label">Books the appointment</div></div>
-        <div class="flow-arrow"></div>
-        <div class="flow-step"><div class="icon">✅</div><div class="label">Sends confirmation</div></div>
-        <div class="flow-arrow"></div>
-        <div class="flow-step"><div class="icon">🔄</div><div class="label">Updates your CRM</div></div>
+        <h3 class="k" style="margin-top:6px;">Lead log</h3>
+        <table id="logTable">
+          <thead><tr><th>Time</th><th>Phone</th><th>Status</th><th>Appt</th></tr></thead>
+          <tbody id="logBody"></tbody>
+        </table>
+        <div class="log-empty" id="logEmpty">No leads logged yet.</div>
+        <div class="log-foot"><button class="btn ghost small" onclick="exportCSV()">Export CSV</button></div>
       </div>
     </div>
-
   </div>
+</section>
 
-  <footer>
-    <span>Built as a live prototype — no real calls, texts, or calendar events are sent in this demo.</span>
-    <span><b>Next:</b> connect to Twilio, Google Calendar API, and a live LLM for the real version.</span>
-  </footer>
-</div>
+<section id="how-it-works">
+  <div class="wrap">
+    <div class="how-head reveal">
+      <div class="eyebrow" style="text-align:center;">How it works</div>
+      <h2>From ring to booked in four steps</h2>
+      <p>No scripts to write, no team to retrain. The flow runs itself.</p>
+    </div>
+    <div class="how-row reveal">
+      <div class="how-step"><div class="badge-num">01</div><div class="t">Customer calls</div><div class="d">Any time, any day — the line is always live.</div></div>
+      <div class="how-arrow"></div>
+      <div class="how-step"><div class="badge-num">02</div><div class="t">AI understands</div><div class="d">Listens, asks the right follow-ups, qualifies the request.</div></div>
+      <div class="how-arrow"></div>
+      <div class="how-step"><div class="badge-num">03</div><div class="t">Books appointment</div><div class="d">Checks real availability and confirms a time on the spot.</div></div>
+      <div class="how-arrow"></div>
+      <div class="how-step"><div class="badge-num">04</div><div class="t">Business gets notified</div><div class="d">Calendar, CRM, and lead log update automatically.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="industries">
+  <div class="wrap">
+    <div class="ind-head reveal">
+      <div class="eyebrow">Industries</div>
+      <h2>Built for businesses that can't afford to miss calls</h2>
+      <p>Any business where a phone call is the front door.</p>
+    </div>
+    <div class="ind-grid reveal">
+      <div class="ind-card"><div class="ic">🏥</div><div class="t">Healthcare</div></div>
+      <div class="ind-card"><div class="ic">🦷</div><div class="t">Dental</div></div>
+      <div class="ind-card"><div class="ic">🍽️</div><div class="t">Restaurants</div></div>
+      <div class="ind-card"><div class="ic">🏨</div><div class="t">Hotels</div></div>
+      <div class="ind-card"><div class="ic">💇</div><div class="t">Beauty</div></div>
+      <div class="ind-card"><div class="ic">🚗</div><div class="t">Automotive</div></div>
+      <div class="ind-card"><div class="ic">🏠</div><div class="t">Real Estate</div></div>
+      <div class="ind-card"><div class="ic">⚖️</div><div class="t">Legal</div></div>
+      <div class="ind-card"><div class="ic">📋</div><div class="t">Consulting</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="results">
+  <div class="wrap results-inner">
+    <div class="reveal">
+      <div class="eyebrow">Outcomes</div>
+      <h2>What actually changes</h2>
+      <p>Not a dashboard full of vanity numbers — just what it does for the day-to-day.</p>
+    </div>
+    <div class="results-list reveal">
+      <div class="result-line"><span class="check">✓</span>Never miss another lead.</div>
+      <div class="result-line"><span class="check">✓</span>Reduce repetitive phone calls.</div>
+      <div class="result-line"><span class="check">✓</span>Free your staff to focus on customers in front of them.</div>
+      <div class="result-line"><span class="check">✓</span>Book appointments automatically, day or night.</div>
+      <div class="result-line"><span class="check">✓</span>Deliver consistent customer service, every call.</div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="faq-head reveal">
+      <div class="eyebrow">FAQ</div>
+      <h2>Frequently asked questions</h2>
+    </div>
+    <div class="faq-list reveal">
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Can I customize the AI? <span class="plus">+</span></button>
+        <div class="faq-a"><p>Yes — the script, tone, hours, pricing, and booking rules are all set up around your business before launch.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Can it transfer calls? <span class="plus">+</span></button>
+        <div class="faq-a"><p>Yes. Complaints, emergencies, or anything the AI isn't confident handling gets routed to a real person immediately.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Can it connect with my CRM? <span class="plus">+</span></button>
+        <div class="faq-a"><p>Yes — bookings, lead details, and call outcomes sync to your calendar and CRM automatically.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">How fast can I deploy it? <span class="plus">+</span></button>
+        <div class="faq-a"><p>Most businesses are live within a few days of providing their hours, services, and pricing details.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Can it answer after business hours? <span class="plus">+</span></button>
+        <div class="faq-a"><p>Yes — that's often where it matters most. Nights, weekends, and holidays are all covered by default.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="wrap reveal">
+    <h2>Ready to hear it for yourself?</h2>
+    <p>Experience how an AI receptionist answers calls, books appointments, and supports your business around the clock.</p>
+    <div class="final-cta-btns">
+      <a href="#demo" class="btn">Try Live Demo</a>
+      <a href="#" class="btn on-dark">Book a Consultation</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footer-inner">
+    <div class="logo"><span class="mark"></span>Buildifo</div>
+    <div class="footer-links">
+      <a href="#features">Product</a>
+      <a href="#features">Features</a>
+      <a href="#">Pricing</a>
+      <a href="#">Privacy</a>
+      <a href="#">Contact</a>
+    </div>
+  </div>
+  <div class="wrap footer-note" style="margin-top:18px;">Built as a live prototype — no real calls, texts, or calendar events are sent in this demo. Next: connect to Twilio, Google Calendar API, and a live LLM for the real version.</div>
+</footer>
 
 <script>
 const copy = {
@@ -904,6 +1252,21 @@ function resetDemo(){
 
 applyURLParams();
 calcROI();
+
+function toggleFaq(btn){
+  const item = btn.closest('.faq-item');
+  item.classList.toggle('open');
+}
+
+function initReveal(){
+  const els = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); obs.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  els.forEach(el => obs.observe(el));
+}
+initReveal();
+
 </script>
 </body>
 </html>
